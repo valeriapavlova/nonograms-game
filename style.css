@@ -1,0 +1,45 @@
+body {
+    font-family: 'Press Start 2P', cursive;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.grid {
+    display: grid;
+    gap: 2px;
+}
+
+.cell {
+    width: 30px;
+    height: 30px;
+    background-color: #ffffff;
+    border: 1px solid #cccccc;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cell.filled {
+    background-color: #000000;
+}
+
+.cell:hover {
+    background-color: #e0e0e0;
+}
+
+.message {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: #333333;
+    display: none;
+}
+
+.message.visible {
+    display: block;
+}

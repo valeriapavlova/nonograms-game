@@ -1,0 +1,12 @@
+{
+  "name": "nonograms-game",
+  "version": "1.0.0",
+  "description": "Este proyecto es una implementación del clásico juego de Nonograms, también conocido como Picross o Griddlers. El juego consiste en llenar una cuadrícula de acuerdo con pistas numéricas que indican cuántas celdas deben ser llenadas en cada fila y columna.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
