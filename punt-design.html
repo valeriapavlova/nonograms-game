@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="en" data-collection="ua">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Punt</title>
+<meta name="description" content="Punt — a nonogram game where every cell is a stitch. Ukrainian embroidery motifs and València symbols.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   DESIGN TOKENS
+   Colors taken from the original Figma frames (navy and light),
+   with contrast fixes for WCAG AA.
+   ========================================================= */
+:root {
+  /* palette */
+  --navy: #4f5f7c;
+  --navy-deep: #435270;
+  --linen: #e8d8c9;
+  --linen-soft: #f3ebe2;
+  --orange: #f3701e;
+  --ink: #282828;
+  --sky: #d0d9ec;            /* was #9aaed2 — too low contrast on navy */
+  --thread-ua: #b3261e;      /* vyshyvanka red */
+  --thread-va: #f3701e;      /* València orange */
+
+  /* roles — dark theme (default, the original look) */
+  --bg: var(--navy);
+  --surface: var(--linen);
+  --text: var(--linen);
+  --text-muted: var(--sky);
+  --cell-bg: var(--linen);
+  --cell-fill: var(--ink);
+  --grid-line: #b9aa9b;
+  --grid-line-strong: var(--ink);
+  --accent: var(--orange);
+  --on-accent: var(--ink);   /* ink on orange passes AA, linen on orange does not */
+  --deco: rgba(208, 217, 236, 0.08);
+  --shadow: 0 8px 24px rgba(40, 40, 40, 0.18);
+
+  /* type */
+  --font-pixel: "Press Start 2P", monospace;
+  --font-text: "IBM Plex Mono", ui-monospace, monospace;
+  --fs-title: clamp(28px, 6vw, 48px);
+  --fs-ui: 12px;
+  --fs-small: 10px;
+  --fs-body: 14px;
+
+  /* space — 8px scale */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 16px;
+  --s4: 24px;
+  --s5: 32px;
+  --s6: 48px;
+  --s7: 64px;
+
+  --radius: 5px;
+  --btn-w: 168px;
+  --thread: var(--thread-va);
+
+  /* header */
+  --header-bg: var(--linen);
+  --header-text: var(--navy);
+  --header-muted: #6b5f53;
+  --header-border: var(--orange);
+
+  /* selected tab / tool */
+  --active-bg: var(--surface);
+  --active-text: var(--ink);
+}
+
+/* =========================================================
+   Each collection has its own palette.
+   The sun/moon button switches to the collection's
+   alternative mode (data-mode="alt").
+   ========================================================= */
+
+/* València, alt — light linen */
+:root[data-collection="va"][data-mode="alt"] {
+  --bg: var(--linen-soft);
+  --surface: #ffffff;
+  --text: var(--ink);
+  --text-muted: #6b5f53;
+  --cell-bg: #ffffff;
+  --cell-fill: var(--navy);
+  --grid-line: #d9cdc0;
+  --grid-line-strong: var(--navy);
+  --deco: rgba(79, 95, 124, 0.06);
+  --shadow: 0 8px 24px rgba(79, 95, 124, 0.12);
+  --active-bg: var(--navy);
+  --active-text: #ffffff;
+}
+
+/* Ukraine, native — white linen, red and black thread,
+   the classic vyshyvanka pair. No blue: white + blue + red
+   would read as the Russian flag. */
+:root[data-collection="ua"] {
+  --red: #c4452d;            /* white text on it passes AA */
+  --black-thread: #1f1d1b;
+  --bg: #f8f4ee;
+  --surface: #ffffff;
+  --text: var(--ink);
+  --text-muted: #6b5f53;
+  --cell-bg: #ffffff;
+  --cell-fill: var(--black-thread);
+  --grid-line: #d8cfc4;
+  --grid-line-strong: var(--black-thread);
+  --accent: var(--red);
+  --on-accent: #ffffff;
+  --thread: var(--red);
+  --deco: rgba(196, 69, 45, 0.08);
+  --shadow: 0 8px 24px rgba(31, 29, 27, 0.12);
+  --header-bg: var(--red);
+  --header-text: #ffffff;
+  --header-muted: #fbeee8;
+  --header-border: var(--black-thread);
+  --active-bg: var(--black-thread);
+  --active-text: #ffffff;
+}
+
+/* Ukraine, alt — dark, inspired by Borshchiv black embroidery */
+:root[data-collection="ua"][data-mode="alt"] {
+  --bg: #1f1d1b;
+  --surface: var(--linen-soft);
+  --text: var(--linen-soft);
+  --text-muted: #c9bfb4;
+  --cell-bg: var(--linen-soft);
+  --cell-fill: #1f1d1b;
+  --grid-line: #cbbfb2;
+  --grid-line-strong: #1f1d1b;
+  --deco: rgba(243, 235, 226, 0.06);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --header-border: var(--linen-soft);
+  --active-bg: var(--linen-soft);
+  --active-text: var(--ink);
+}
+
+/* ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- header ---------- */
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: var(--s3) var(--s4);
+  background: var(--header-bg);
+  color: var(--header-text);
+  border-bottom: 6px solid var(--header-border);
+  transition: background-color 0.3s ease;
+}
+
+.brand {
+  grid-column: 2;
+  text-align: center;
+}
+
+.brand__title {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: var(--fs-title);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.brand__tagline {
+  margin: var(--s2) 0 0;
+  font-family: var(--font-text);
+  font-size: 12px;
+  color: var(--header-muted);
+}
+
+.header__tools {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  gap: var(--s2);
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--header-text);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--header-text);
+}
+
+.icon-btn svg { width: 18px; height: 18px; }
+.icon-btn[aria-pressed="true"] { background: var(--header-text); color: var(--header-bg); }
+
+/* ---------- main layout ---------- */
+.main {
+  position: relative;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--s5) var(--s3) var(--s6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s4);
+}
+
+/* segmented controls: collection + level */
+.segmented {
+  display: inline-flex;
+  padding: var(--s1);
+  gap: var(--s1);
+  border: 2px solid var(--text-muted);
+  border-radius: var(--radius);
+}
+
+.segmented button {
+  padding: var(--s2) var(--s3);
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-ui);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.segmented button[aria-pressed="true"] {
+  background: var(--active-bg);
+  color: var(--active-text);
+}
+
+.segmented button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.segmented small {
+  display: block;
+  margin-top: var(--s1);
+  font-size: 8px;
+  opacity: 0.7;
+}
+
+.levels button { min-width: 112px; }
+
+/* timer */
+.status {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  font-family: var(--font-pixel);
+}
+
+.timer { font-size: 28px; color: var(--text); }
+.best { font-size: var(--fs-small); color: var(--text-muted); }
+
+/* ---------- game area ---------- */
+.stage {
+  display: grid;
+  grid-template-columns: auto;
+  justify-items: center;
+  gap: var(--s4);
+}
+
+.board {
+  --n: 5;
+  --cell: min(calc(360px / var(--n)), calc((100vw - 140px) / var(--n)));
+  --clue-fs: clamp(10px, calc(var(--cell) * 0.28), 13px);
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  font-family: var(--font-pixel);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.clues-col {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--n), var(--cell));
+  align-items: end;
+  padding-bottom: var(--s2);
+}
+
+.clues-row {
+  grid-row: 2;
+  display: grid;
+  grid-template-rows: repeat(var(--n), var(--cell));
+  justify-items: end;
+  padding-right: var(--s2);
+}
+
+.clue {
+  display: flex;
+  gap: calc(var(--cell) * 0.18);
+  font-size: var(--clue-fs);
+  color: var(--text);
+  transition: opacity 0.25s ease;
+}
+
+.clues-col .clue {
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.5;
+  gap: calc(var(--cell) * 0.08);
+}
+
+.clues-row .clue { align-items: center; }
+
+/* solved line → clue fades: the player sees progress */
+.clue.is-done { opacity: 0.3; }
+
+/* row/column under the pointer */
+.clue.is-hover { color: var(--accent); }
+
+.cells {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--n), var(--cell));
+  border: 3px solid var(--grid-line-strong);
+  border-radius: var(--radius);
+  background: var(--cell-bg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.cell {
+  position: relative;
+  width: var(--cell);
+  height: var(--cell);
+  border: 0;
+  border-right: 1px solid var(--grid-line);
+  border-bottom: 1px solid var(--grid-line);
+  background: var(--cell-bg);
+  padding: 0;
+}
+
+/* every 5th line is thicker — easier counting on 10×10 and 15×15 */
+.cell.edge-r { border-right: 3px solid var(--grid-line-strong); }
+.cell.edge-b { border-bottom: 3px solid var(--grid-line-strong); }
+.cell.last-c { border-right: 0; }
+.cell.last-r { border-bottom: 0; }
+
+.cell.is-filled { background: var(--cell-fill); }
+
+.cell.is-marked::before,
+.cell.is-marked::after {
+  content: "";
+  position: absolute;
+  inset: 50% 22%;
+  height: 2px;
+  background: var(--grid-line);
+  transform: rotate(45deg);
+}
+.cell.is-marked::after { transform: rotate(-45deg); }
+
+.cell.is-wrong { box-shadow: inset 0 0 0 3px var(--accent); }
+
+@media (hover: hover) {
+  .board:not(.is-won) .cell:hover { box-shadow: inset 0 0 0 2px var(--accent); }
+}
+
+/* win: every filled cell becomes a cross-stitch */
+.board.is-won .cell.is-filled {
+  background-color: var(--cell-bg);
+  background-image:
+    linear-gradient(45deg, transparent 40%, var(--thread) 40% 60%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, var(--thread) 40% 60%, transparent 60%);
+  background-size: 76% 76%;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: stitch 0.45s ease both;
+  animation-delay: var(--d, 0ms);
+}
+
+.board.is-won .cell.is-marked::before,
+.board.is-won .cell.is-marked::after { display: none; }
+
+@keyframes stitch {
+  from { background-size: 0 0; }
+  to   { background-size: 76% 76%; }
+}
+
+/* ---------- controls under the board ---------- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s3);
+}
+
+.mode {
+  display: inline-flex;
+  border: 2px solid var(--text-muted);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.mode button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.mode button[aria-pressed="true"] { background: var(--active-bg); color: var(--active-text); }
+.mode svg { width: 16px; height: 16px; }
+
+.btn {
+  min-width: var(--btn-w);
+  height: 48px;
+  padding: 0 var(--s4);
+  border-radius: var(--radius);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-ui);
+  text-transform: lowercase;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.btn:active { transform: translateY(1px); }
+
+/* one primary action — the only orange button */
+.btn--primary {
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow);
+}
+
+.btn--ghost {
+  border: 2px solid var(--text-muted);
+  background: transparent;
+  color: var(--text);
+}
+
+.btn--ghost:hover { border-color: var(--text); }
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ---------- story card after solving ---------- */
+.story {
+  width: min(400px, 100%);
+  padding: var(--s4);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  border-top: 6px solid var(--thread);
+}
+
+.story[hidden] { display: none; }
+
+.story__eyebrow {
+  margin: 0 0 var(--s2);
+  font-family: var(--font-pixel);
+  font-size: var(--fs-small);
+  color: #6b5f53;              /* orange text on white fails contrast — the thread color lives in the top border */
+}
+
+.story__title {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.story__native {
+  margin: var(--s1) 0 var(--s3);
+  font-size: 13px;
+  color: #6b5f53;
+}
+
+.story__text {
+  margin: 0 0 var(--s4);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+.story .btn--primary { width: 100%; }
+
+/* ---------- footer ---------- */
+.footer {
+  padding: var(--s4) var(--s3) var(--s5);
+  text-align: center;
+  font-family: var(--font-pixel);
+  font-size: var(--fs-small);
+  color: var(--text-muted);
+}
+
+.footer a { color: inherit; }
+
+/* ---------- decorative stitches in the background ---------- */
+.deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.deco span {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-image:
+    linear-gradient(45deg, transparent 38%, var(--deco) 38% 62%, transparent 62%),
+    linear-gradient(-45deg, transparent 38%, var(--deco) 38% 62%, transparent 62%);
+}
+
+body { position: relative; z-index: 0; }
+
+/* ---------- responsive ---------- */
+@media (min-width: 900px) {
+  .stage.has-story {
+    grid-template-columns: auto 360px;
+    align-items: center;
+    gap: var(--s6);
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    grid-template-columns: 1fr auto;
+    padding: var(--s3);
+  }
+  .brand { grid-column: 1; text-align: left; }
+  .header__tools { grid-column: 2; }
+  .brand__tagline { display: none; }
+  .main { padding-top: var(--s4); gap: var(--s3); }
+  .levels button { min-width: 0; padding: var(--s2) 10px; }
+  .btn { min-width: 0; flex: 1 1 40%; }
+  .controls { width: 100%; }
+  .deco { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms;
+    transition-duration: 0.01ms;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <h1 class="brand__title">PUNT</h1>
+    <p class="brand__tagline">stitch by stitch, from Ukraine to València</p>
+  </div>
+  <div class="header__tools">
+    <button class="icon-btn" id="themeBtn" aria-pressed="false" aria-label="Alternative colors">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 2h2v3h-2zM11 19h2v3h-2zM2 11h3v2H2zM19 11h3v2h-3zM8 8h8v8H8zM4.2 5.6l1.4-1.4 2.1 2.1-1.4 1.4zM16.3 17.7l1.4-1.4 2.1 2.1-1.4 1.4zM4.2 18.4l2.1-2.1 1.4 1.4-2.1 2.1zM16.3 6.3l2.1-2.1 1.4 1.4-2.1 2.1z"/></svg>
+    </button>
+    <button class="icon-btn" id="soundBtn" aria-pressed="false" aria-label="Sound">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3zM15 9h2v6h-2zM18 7h2v10h-2z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="deco" aria-hidden="true">
+    <span style="top:6%;left:4%"></span><span style="top:6%;left:calc(4% + 24px)"></span><span style="top:calc(6% + 24px);left:4%"></span>
+    <span style="top:40%;left:2%"></span><span style="top:calc(40% + 24px);left:calc(2% + 24px)"></span>
+    <span style="top:12%;right:5%"></span><span style="top:calc(12% + 24px);right:calc(5% + 24px)"></span><span style="top:calc(12% + 48px);right:5%"></span>
+    <span style="bottom:12%;right:3%"></span><span style="bottom:12%;right:calc(3% + 24px)"></span>
+    <span style="bottom:8%;left:8%"></span>
+  </div>
+
+  <nav class="segmented" aria-label="Collection">
+    <button data-collection="ua" aria-pressed="true">ukraine</button>
+    <button data-collection="va" aria-pressed="false">valència</button>
+  </nav>
+
+  <nav class="segmented levels" aria-label="Level">
+    <button data-level="easy" aria-pressed="true">easy<small>5×5</small></button>
+    <button data-level="medium" aria-pressed="false">medium<small>10×10</small></button>
+    <button data-level="hard" aria-pressed="false" disabled title="Coming soon">hard<small>15×15</small></button>
+  </nav>
+
+  <div class="status" aria-live="polite">
+    <span class="timer" id="timer">00:00</span>
+    <span class="best" id="best"></span>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="board" id="board" aria-label="Puzzle board">
+      <div class="clues-col" id="cluesCol"></div>
+      <div class="clues-row" id="cluesRow"></div>
+      <div class="cells" id="cells" role="grid"></div>
+    </div>
+
+    <aside class="story" id="story" hidden aria-live="polite">
+      <p class="story__eyebrow" id="storyEyebrow"></p>
+      <h2 class="story__title" id="storyTitle"></h2>
+      <p class="story__native" id="storyNative"></p>
+      <p class="story__text" id="storyText"></p>
+      <button class="btn btn--primary" id="nextBtn">next puzzle</button>
+    </aside>
+  </div>
+
+  <div class="controls">
+    <div class="mode" role="group" aria-label="Tool">
+      <button id="modeFill" aria-pressed="true" aria-label="Fill cell">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" fill="currentColor"/></svg>
+      </button>
+      <button id="modeMark" aria-pressed="false" aria-label="Mark empty">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.5"/></svg>
+      </button>
+    </div>
+    <button class="btn btn--primary" id="checkBtn">check</button>
+    <button class="btn btn--ghost" id="resetBtn">reset</button>
+    <button class="btn btn--ghost" id="solveBtn">solution</button>
+  </div>
+
+  <p class="hint">click to fill · right-click to mark · drag to paint · progress saves automatically</p>
+</main>
+
+<footer class="footer">made by <a href="https://va-pavlova.com">valeria pavlova</a></footer>
+
+<script>
+/* =========================================================
+   PUZZLES — every one checked with a solver: single solution.
+   # = filled, . = empty
+   ========================================================= */
+const PUZZLES = {
+  ua: {
+    easy: {
+      name: "Wolf's teeth",
+      native: "Вовчі зуби · Vovchi zuby",
+      region: "Ukraine · pysanky & embroidery",
+      text: "Rows of sharp triangles used as a protective motif. The pattern was meant to guard the person wearing it, like a fence around the field.",
+      grid: ["#.#.#", "#####", ".....", "#####", "#.#.#"]
+    },
+    medium: {
+      name: "Sown field",
+      native: "Засіяне поле · Zasiiane pole",
+      region: "Ukraine · pysanky & embroidery",
+      text: "A rhombus with a seed in the centre. One of the oldest Ukrainian symbols: the ploughed and sown land, a wish for a good harvest and a full home.",
+      grid: [
+        "....##....",
+        "...#..#...",
+        "..#.##.#..",
+        ".#.#..#.#.",
+        "#.#.##.#.#",
+        "#.#.##.#.#",
+        ".#.#..#.#.",
+        "..#.##.#..",
+        "...#..#...",
+        "....##...."
+      ]
+    }
+  },
+  va: {
+    easy: {
+      name: "Orange",
+      native: "Taronja",
+      region: "València · l'Horta",
+      text: "Orange groves surround the city. In spring the blossom, azahar, fills the streets with its scent.",
+      grid: ["..#..", ".###.", "#####", "#####", ".###."]
+    },
+    medium: {
+      name: "The bat",
+      native: "Rat penat",
+      region: "València · coat of arms",
+      text: "A bat sits on top of the crown in the city's coat of arms. Legend links it to King Jaume I and the conquest of València in 1238.",
+      grid: [
+        "...#..#...",
+        "...####...",
+        "#..#..#..#",
+        "##.####.##",
+        "##########",
+        "##########",
+        "###.##.###",
+        "#...##...#",
+        "....##....",
+        "...#..#..."
+      ]
+    }
+  }
+};
+
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage off */ } }
+};
+
+function lineClue(line) {
+  const out = [];
+  let run = 0;
+  for (const v of line) {
+    if (v === 1) run++;
+    else if (run) { out.push(run); run = 0; }
+  }
+  if (run) out.push(run);
+  return out;
+}
+
+const fmt = (s) => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+
+/* ---------- state ---------- */
+let collection = "ua";
+let level = "easy";
+let puzzle, n, solution, state, rowClues, colClues;
+let mode = 1;            // 1 fill, 2 mark
+let painting = null;     // value being painted during a drag
+let seconds = 0, timerId = null, won = false, sound = false;
+
+const key = () => `punt:${collection}:${level}`;
+
+/* ---------- build ---------- */
+function load() {
+  puzzle = PUZZLES[collection][level];
+  n = puzzle.grid.length;
+  solution = puzzle.grid.map((r) => [...r].map((c) => (c === "#" ? 1 : 0)));
+  rowClues = solution.map(lineClue);
+  colClues = solution[0].map((_, c) => lineClue(solution.map((r) => r[c])));
+
+  const saved = store.get(key());
+  state = saved && saved.state && saved.state.length === n
+    ? saved.state
+    : Array.from({ length: n }, () => Array(n).fill(0));
+  seconds = saved ? saved.seconds || 0 : 0;
+  won = false;
+
+  document.documentElement.dataset.collection = collection;
+  stopTimer();
+  render();
+  hideStory();
+  updateBest();
+  $("timer").textContent = fmt(seconds);
+}
+
+function render() {
+  const board = $("board");
+  board.style.setProperty("--n", n);
+  board.classList.remove("is-won");
+
+  $("cluesCol").innerHTML = colClues
+    .map((c, i) => `<div class="clue" data-col="${i}">${(c.length ? c : [0]).map((x) => `<span>${x}</span>`).join("")}</div>`)
+    .join("");
+  $("cluesRow").innerHTML = rowClues
+    .map((c, i) => `<div class="clue" data-row="${i}">${(c.length ? c : [0]).map((x) => `<span>${x}</span>`).join("")}</div>`)
+    .join("");
+
+  const cells = $("cells");
+  cells.innerHTML = "";
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      const b = document.createElement("button");
+      b.className = "cell";
+      if (c % 5 === 4 && c !== n - 1) b.classList.add("edge-r");
+      if (r % 5 === 4 && r !== n - 1) b.classList.add("edge-b");
+      if (c === n - 1) b.classList.add("last-c");
+      if (r === n - 1) b.classList.add("last-r");
+      b.dataset.r = r;
+      b.dataset.c = c;
+      b.style.setProperty("--d", `${(r + c) * 35}ms`);
+      b.setAttribute("aria-label", `Row ${r + 1}, column ${c + 1}`);
+      b.tabIndex = r === 0 && c === 0 ? 0 : -1;
+      cells.appendChild(b);
+    }
+  }
+  paintAll();
+}
+
+function cellEl(r, c) { return $("cells").children[r * n + c]; }
+
+function paintCell(r, c) {
+  const el = cellEl(r, c);
+  const v = state[r][c];
+  el.classList.toggle("is-filled", v === 1);
+  el.classList.toggle("is-marked", v === 2);
+  el.setAttribute("aria-pressed", v === 1 ? "true" : "false");
+}
+
+function paintAll() {
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) paintCell(r, c);
+  updateClues();
+}
+
+function updateClues() {
+  const filled = (v) => (v === 1 ? 1 : 0);
+  document.querySelectorAll("#cluesRow .clue").forEach((el, r) => {
+    el.classList.toggle("is-done", lineClue(state[r].map(filled)).join() === rowClues[r].join());
+  });
+  document.querySelectorAll("#cluesCol .clue").forEach((el, c) => {
+    el.classList.toggle("is-done", lineClue(state.map((row) => filled(row[c]))).join() === colClues[c].join());
+  });
+}
+
+/* ---------- play ---------- */
+function setCell(r, c, v) {
+  if (won || state[r][c] === v) return;
+  state[r][c] = v;
+  paintCell(r, c);
+  updateClues();
+  startTimer();
+  blip();
+  store.set(key(), { state, seconds });
+  checkWin();
+}
+
+function checkWin() {
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
+      if ((state[r][c] === 1) !== (solution[r][c] === 1)) return;
+  finish(false);
+}
+
+function finish(revealed) {
+  won = true;
+  stopTimer();
+  $("board").classList.add("is-won");
+  if (!revealed) {
+    const best = store.get(key() + ":best");
+    if (!best || seconds < best) store.set(key() + ":best", seconds);
+    updateBest();
+  }
+  store.set(key(), null);
+  showStory(revealed);
+}
+
+/* pointer: click, right-click, drag to paint (mouse + touch) */
+const cellsEl = $("cells");
+
+cellsEl.addEventListener("contextmenu", (e) => e.preventDefault());
+
+cellsEl.addEventListener("pointerdown", (e) => {
+  const el = e.target.closest(".cell");
+  if (!el || won) return;
+  e.preventDefault();
+  const r = +el.dataset.r, c = +el.dataset.c;
+  const tool = e.button === 2 ? 2 : mode;
+  painting = state[r][c] === tool ? 0 : tool;
+  setCell(r, c, painting);
+});
+
+window.addEventListener("pointermove", (e) => {
+  const target = document.elementFromPoint(e.clientX, e.clientY);
+  const el = target && target.closest ? target.closest(".cell") : null;
+  highlight(el);
+  if (painting === null || !el) return;
+  setCell(+el.dataset.r, +el.dataset.c, painting);
+});
+
+window.addEventListener("pointerup", () => { painting = null; });
+
+function highlight(el) {
+  document.querySelectorAll(".clue.is-hover").forEach((x) => x.classList.remove("is-hover"));
+  if (!el) return;
+  document.querySelector(`#cluesRow [data-row="${el.dataset.r}"]`)?.classList.add("is-hover");
+  document.querySelector(`#cluesCol [data-col="${el.dataset.c}"]`)?.classList.add("is-hover");
+}
+
+/* keyboard: arrows move, Enter/Space fill, X marks */
+cellsEl.addEventListener("keydown", (e) => {
+  const el = e.target.closest(".cell");
+  if (!el) return;
+  let r = +el.dataset.r, c = +el.dataset.c;
+  const moves = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+  if (moves[e.key]) {
+    e.preventDefault();
+    r = Math.min(n - 1, Math.max(0, r + moves[e.key][0]));
+    c = Math.min(n - 1, Math.max(0, c + moves[e.key][1]));
+    el.tabIndex = -1;
+    const next = cellEl(r, c);
+    next.tabIndex = 0;
+    next.focus();
+    highlight(next);
+  } else if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    setCell(r, c, state[r][c] === mode ? 0 : mode);
+  } else if (e.key.toLowerCase() === "x") {
+    setCell(r, c, state[r][c] === 2 ? 0 : 2);
+  }
+});
+
+/* ---------- timer ---------- */
+function startTimer() {
+  if (timerId) return;
+  timerId = setInterval(() => {
+    seconds++;
+    $("timer").textContent = fmt(seconds);
+  }, 1000);
+}
+function stopTimer() { clearInterval(timerId); timerId = null; }
+function updateBest() {
+  const best = store.get(key() + ":best");
+  $("best").textContent = best ? `best ${fmt(best)}` : "";
+}
+
+/* ---------- story card ---------- */
+function showStory(revealed) {
+  $("storyEyebrow").textContent = revealed ? "solution" : `solved in ${fmt(seconds)}`;
+  $("storyTitle").textContent = puzzle.name;
+  $("storyNative").textContent = `${puzzle.native} — ${puzzle.region}`;
+  $("storyText").textContent = puzzle.text;
+  $("story").hidden = false;
+  $("stage").classList.add("has-story");
+}
+function hideStory() {
+  $("story").hidden = true;
+  $("stage").classList.remove("has-story");
+}
+
+/* ---------- controls ---------- */
+$("checkBtn").addEventListener("click", () => {
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
+      if (state[r][c] === 1 && solution[r][c] === 0) cellEl(r, c).classList.add("is-wrong");
+  setTimeout(() => document.querySelectorAll(".is-wrong").forEach((x) => x.classList.remove("is-wrong")), 1400);
+});
+
+$("resetBtn").addEventListener("click", () => {
+  store.set(key(), null);
+  load();
+});
+
+$("solveBtn").addEventListener("click", () => {
+  if (won) return;
+  state = solution.map((row) => row.map((v) => (v ? 1 : 0)));
+  paintAll();
+  finish(true);
+});
+
+$("nextBtn").addEventListener("click", () => {
+  const order = [["ua", "easy"], ["ua", "medium"], ["va", "easy"], ["va", "medium"]];
+  const i = order.findIndex(([a, b]) => a === collection && b === level);
+  [collection, level] = order[(i + 1) % order.length];
+  syncTabs();
+  load();
+});
+
+function syncTabs() {
+  document.querySelectorAll("[data-collection]").forEach((b) => {
+    if (b.tagName === "BUTTON") b.setAttribute("aria-pressed", b.dataset.collection === collection);
+  });
+  document.querySelectorAll("[data-level]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.level === level));
+}
+
+document.querySelectorAll("button[data-collection]").forEach((b) =>
+  b.addEventListener("click", () => { collection = b.dataset.collection; syncTabs(); load(); })
+);
+document.querySelectorAll("button[data-level]").forEach((b) =>
+  b.addEventListener("click", () => { level = b.dataset.level; syncTabs(); load(); })
+);
+
+$("modeFill").addEventListener("click", () => setMode(1));
+$("modeMark").addEventListener("click", () => setMode(2));
+function setMode(m) {
+  mode = m;
+  $("modeFill").setAttribute("aria-pressed", m === 1);
+  $("modeMark").setAttribute("aria-pressed", m === 2);
+}
+
+/* mode: each collection has a native palette; the button flips to its alternative */
+if (store.get("punt:mode") === "alt") setMode2("alt");
+$("themeBtn").addEventListener("click", () => {
+  setMode2(document.documentElement.dataset.mode === "alt" ? "native" : "alt");
+});
+function setMode2(m) {
+  document.documentElement.dataset.mode = m;
+  $("themeBtn").setAttribute("aria-pressed", m === "alt");
+  store.set("punt:mode", m);
+}
+
+/* sound: tiny click, off by default */
+let audio;
+$("soundBtn").addEventListener("click", () => {
+  sound = !sound;
+  $("soundBtn").setAttribute("aria-pressed", sound);
+});
+function blip() {
+  if (!sound) return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = "square";
+    o.frequency.value = 660;
+    g.gain.setValueAtTime(0.04, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.06);
+    o.connect(g).connect(audio.destination);
+    o.start();
+    o.stop(audio.currentTime + 0.06);
+  } catch (e) { /* no audio */ }
+}
+
+load();
+</script>
+</body>
+</html>
