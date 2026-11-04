@@ -1,6 +1,7 @@
 /* DOM rendering — reads the Game, never changes it */
 import { t, getLang } from "./i18n.js";
 import { fmt, FILLED, MARKED } from "./game.js";
+import { LEVELS, hasPuzzle } from "./puzzles.js";
 
 export const $ = (id) => document.getElementById(id);
 
@@ -101,7 +102,15 @@ export function hideStory() {
 /* ---------- toggles ---------- */
 export function syncTabs(collection, level) {
   document.querySelectorAll("button[data-collection]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.collection === collection));
-  document.querySelectorAll("button[data-level]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.level === level));
+  document.querySelectorAll("button[data-level]").forEach((b) => {
+    const lv = b.dataset.level;
+    const ready = hasPuzzle(collection, lv);
+    b.setAttribute("aria-pressed", lv === level);
+    /* still focusable, so keyboard and screen reader users can find out why it is locked */
+    if (ready) b.removeAttribute("aria-disabled");
+    else b.setAttribute("aria-disabled", "true");
+    b.querySelector("small").textContent = ready ? `${LEVELS[lv]}×${LEVELS[lv]}` : t("soon");
+  });
 }
 
 export function syncTool(mode) {

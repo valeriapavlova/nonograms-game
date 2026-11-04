@@ -1,6 +1,6 @@
 /* Entry point: state + event wiring */
 import { Game, FILLED, MARKED, EMPTY } from "./game.js";
-import { getPuzzle, ORDER } from "./puzzles.js";
+import { getPuzzle, hasPuzzle, ORDER } from "./puzzles.js";
 import { setLang, initialLang } from "./i18n.js";
 import { store, loadProgress, saveProgress, clearProgress, loadBest, saveBest } from "./storage.js";
 import * as ui from "./ui.js";
@@ -133,10 +133,20 @@ $("nextBtn").addEventListener("click", () => {
 });
 
 document.querySelectorAll("button[data-collection]").forEach((b) =>
-  b.addEventListener("click", () => { collection = b.dataset.collection; ui.syncTabs(collection, level); load(); })
+  b.addEventListener("click", () => {
+    collection = b.dataset.collection;
+    if (!hasPuzzle(collection, level)) level = "easy";
+    ui.syncTabs(collection, level);
+    load();
+  })
 );
 document.querySelectorAll("button[data-level]").forEach((b) =>
-  b.addEventListener("click", () => { level = b.dataset.level; ui.syncTabs(collection, level); load(); })
+  b.addEventListener("click", () => {
+    if (b.getAttribute("aria-disabled") === "true") return;
+    level = b.dataset.level;
+    ui.syncTabs(collection, level);
+    load();
+  })
 );
 
 $("modeFill").addEventListener("click", () => { tool = FILLED; ui.syncTool(tool); });
@@ -180,8 +190,10 @@ document.querySelectorAll("[data-lang]").forEach((b) =>
     ui.renderBoard(game);              /* cell labels */
     if (game.won) { ui.setWon(true); ui.fillStory(game, revealed); }
     ui.showBest(loadBest(collection, level));
+    ui.syncTabs(collection, level);    /* "coming soon" label */
   })
 );
 
 setLang(initialLang());
+ui.syncTabs(collection, level);
 load();

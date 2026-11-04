@@ -1,6 +1,16 @@
 /* =========================================================
    PUZZLES — every one checked with a solver: single solution.
    # = filled, . = empty
+
+   Format: PUZZLES[collection][level] = {
+     original, name{en,ca,uk}, region{en,ca,uk}, text{en,ca,uk}, grid[]
+   }
+
+   ADDING A HARD (15×15) PUZZLE
+   1. Add `hard: { ... }` to a collection below, grid = 15 rows × 15 chars.
+   2. Run `npm run check` — it must say "one solution".
+   The "hard" button unlocks by itself for that collection;
+   collections without one keep showing "coming soon".
    ========================================================= */
 export const PUZZLES = {
   ua: {
@@ -81,6 +91,7 @@ export const COLLECTIONS = Object.keys(PUZZLES);
 export const ORDER = COLLECTIONS.flatMap((c) => Object.keys(PUZZLES[c]).map((l) => [c, l]));
 
 export const getPuzzle = (collection, level) => PUZZLES[collection][level];
+export const hasPuzzle = (collection, level) => Boolean(PUZZLES[collection] && PUZZLES[collection][level]);
 
 /* grid size per level — scripts/check-puzzles.js checks every puzzle against it */
 export const LEVELS = { easy: 5, medium: 10, hard: 15 };

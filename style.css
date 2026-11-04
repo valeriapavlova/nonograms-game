@@ -265,7 +265,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   color: var(--active-text);
 }
 
-.segmented button:disabled {
+.segmented button[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
 }

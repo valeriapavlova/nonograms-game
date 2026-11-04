@@ -5,7 +5,7 @@ export const STRINGS = {
   en: {
     tagline: "stitch by stitch, from Ukraine to València",
     ukraine: "ukraine", valencia: "valència",
-    easy: "easy", medium: "medium", hard: "hard", soon: "Coming soon",
+    easy: "easy", medium: "medium", hard: "hard", soon: "coming soon",
     check: "check", reset: "reset", solution: "solution", next: "next puzzle",
     hint: "click to fill · right-click to mark · drag to paint · progress saves automatically",
     madeBy: "made by", author: "valeria pavlova",
@@ -18,7 +18,7 @@ export const STRINGS = {
   ca: {
     tagline: "punt a punt, d'Ucraïna a València",
     ukraine: "ucraïna", valencia: "valència",
-    easy: "fàcil", medium: "mitjà", hard: "difícil", soon: "Prompte",
+    easy: "fàcil", medium: "mitjà", hard: "difícil", soon: "prompte",
     check: "comprova", reset: "reinicia", solution: "solució", next: "següent",
     hint: "clic per a omplir · clic dret per a marcar · arrossega per a pintar · el progrés es guarda sol",
     madeBy: "fet per", author: "valeria pavlova",
@@ -31,7 +31,7 @@ export const STRINGS = {
   uk: {
     tagline: "стібок за стібком, з України до Валенсії",
     ukraine: "україна", valencia: "валенсія",
-    easy: "легко", medium: "середньо", hard: "складно", soon: "Скоро",
+    easy: "легко", medium: "середньо", hard: "складно", soon: "скоро",
     check: "перевірити", reset: "скинути", solution: "рішення", next: "далі",
     hint: "клік — заповнити · правий клік — позначити · тягни, щоб малювати · прогрес зберігається сам",
     madeBy: "зробила", author: "валерія павлова",
