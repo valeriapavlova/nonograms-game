@@ -5,7 +5,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "python3 -m http.server 8000"
+    "start": "python3 -m http.server 8000",
+    "check": "node scripts/check-puzzles.js"
   },
   "author": "Valeria Pavlova"
 }

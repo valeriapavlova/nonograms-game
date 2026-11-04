@@ -81,3 +81,6 @@ export const COLLECTIONS = Object.keys(PUZZLES);
 export const ORDER = COLLECTIONS.flatMap((c) => Object.keys(PUZZLES[c]).map((l) => [c, l]));
 
 export const getPuzzle = (collection, level) => PUZZLES[collection][level];
+
+/* grid size per level — scripts/check-puzzles.js checks every puzzle against it */
+export const LEVELS = { easy: 5, medium: 10, hard: 15 };
