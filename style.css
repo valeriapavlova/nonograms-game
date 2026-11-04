@@ -226,8 +226,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
   display: inline-flex;
   border: 2px solid var(--header-text);
   border-radius: var(--radius);
-  overflow: hidden;
 }
+
+/* no overflow: hidden on .lang / .mode — it clipped the focus ring;
+   the end buttons get the inner radius instead */
+.lang button:first-child,
+.mode button:first-child { border-radius: 3px 0 0 3px; }
+.lang button:last-child,
+.mode button:last-child { border-radius: 0 3px 3px 0; }
 
 .lang button {
   min-width: 44px;
@@ -468,7 +474,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   display: inline-flex;
   border: 2px solid var(--text-muted);
   border-radius: var(--radius);
-  overflow: hidden;
 }
 
 .mode button {
