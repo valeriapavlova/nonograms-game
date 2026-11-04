@@ -255,11 +255,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .icon-btn[aria-pressed="true"] { background: var(--header-text); color: var(--header-bg); }
 
 /* ---------- main layout ---------- */
+/* wrapper of header + main: no box on larger screens, one screen on phones */
+.app { display: contents; }
+
 .main {
   position: relative;
   max-width: 1120px;
   margin: 0 auto;
-  padding: var(--s5) var(--s3) var(--s6);
+  padding: var(--s5) var(--s3) var(--s4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -305,6 +308,46 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 .levels button { min-width: 112px; }
+
+/* progress dots: one per puzzle of the level.
+   solved = filled, not yet = hollow, current = ring around it —
+   shape, not color alone, tells the states apart */
+.dots {
+  display: flex;
+  justify-content: center;
+  margin: calc(var(--s3) * -1) 0;   /* sits close to the level switch */
+}
+
+.dots[hidden] { display: none; }
+
+.meta { display: contents; }
+
+.dot {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.dot::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--text-muted);
+  border-radius: 50%;
+}
+
+.dot.is-solved::before { background: var(--text); border-color: var(--text); }
+
+.dot[aria-current="true"]::before {
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--text);
+}
+
+.dot:focus-visible { outline-offset: -2px; }
 
 /* timer */
 .status {
@@ -518,6 +561,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .btn--ghost:hover { border-color: var(--text); }
 
+/* reset / solution: text button here, icon + caption on phones */
+.btn--icon svg { display: none; }
+
 /* result of "check" — visible and announced (role="status") */
 .feedback {
   min-height: 1.5em;
@@ -530,7 +576,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 .hint {
-  margin: 0;
+  max-width: 1120px;
+  margin: 0 auto var(--s6);
+  padding: 0 var(--s3);
   font-size: 12px;
   color: var(--text-muted);
   text-align: center;
@@ -578,6 +626,27 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .story .btn--primary { width: 100%; }
 
+/* close button — only the phone bottom sheet needs it */
+.story { position: relative; }
+.story:focus { outline: none; }   /* focused by script only, so screen readers start here */
+
+.story__close {
+  display: none;
+  place-items: center;
+  position: absolute;
+  top: var(--s2);
+  right: var(--s2);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+}
+
+.story__close svg { width: 16px; height: 16px; }
+
 /* ---------- footer ---------- */
 .footer {
   padding: var(--s4) var(--s3) var(--s5);
@@ -618,20 +687,158 @@ body { position: relative; z-index: 0; }
 }
 
 @media (max-width: 640px) {
+  /* header + game fill exactly one screen (dvh follows Safari's bars);
+     the hint and footer sit below it */
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+
   .header {
     grid-template-columns: 1fr auto;
-    padding: var(--s3);
+    padding:
+      calc(var(--s2) + env(safe-area-inset-top))
+      calc(var(--s3) + env(safe-area-inset-right))
+      var(--s2)
+      calc(var(--s3) + env(safe-area-inset-left));
+    border-bottom-width: 4px;
   }
   .brand { grid-column: 1; text-align: left; }
+  .brand__title { font-size: 22px; }
   .header__tools { grid-column: 2; }
   .brand__tagline { display: none; }
   .lang button { min-width: 36px; padding: 0 var(--s1); }
   .icon-btn { width: 36px; height: 36px; }
-  .main { padding-top: var(--s4); gap: var(--s3); }
-  .levels button { min-width: 0; padding: var(--s2) 10px; }
-  .btn { min-width: 0; flex: 1 1 40%; }
-  .controls { width: 100%; }
+
+  .main {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    padding:
+      var(--s2)
+      calc(var(--s3) + env(safe-area-inset-right))
+      calc(var(--s2) + env(safe-area-inset-bottom))
+      calc(var(--s3) + env(safe-area-inset-left));
+    gap: var(--s2);
+  }
+
+  .segmented button { padding: 6px var(--s3); }
+  .levels button { min-width: 0; padding: 6px 10px; }
+  .segmented small { margin-top: 2px; }
+  /* dots and timer share one row */
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s3);
+  }
+  .dots { margin: 0; }
+  .dot { width: 44px; height: 44px; }
+  .status {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .timer { font-size: 16px; }
+  .best:empty { display: none; }
+  .clues-col .clue { line-height: 1.2; }
+
+  /* the board takes whatever height is left — main.js sizes the cells */
+  .stage {
+    flex: 1 1 0;
+    min-height: 0;
+    align-self: stretch;
+    place-items: center;
+  }
+
+  /* one row in thumb reach: ■/✕ · check · reset · solution */
+  .controls {
+    order: 1;                    /* last row, under the "check" message */
+    width: 100%;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: var(--s2);
+  }
+  .mode button { width: 44px; height: 48px; }
+  .btn { min-width: 0; padding: 0 var(--s2); }
+  #checkBtn { flex: 1 1 auto; height: 48px; padding: 0 var(--s1); }
+  :root:lang(uk) #checkBtn { font-size: 10px; }
+  .btn--icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s1);
+    flex: 0 0 auto;
+    min-width: 52px;
+    height: 48px;
+    padding: 0 var(--s1);
+    font-family: var(--font-text);
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  .btn--icon svg { display: block; width: 18px; height: 18px; }
+  :root:lang(uk) .btn--icon { font-size: 11px; }
+
+  /* "check" result keeps its line, so the board does not jump when it appears */
+  .feedback {
+    min-height: 15px;
+    margin: calc(var(--s1) * -1) 0;
+    line-height: 15px;
+    white-space: nowrap;
+  }
+
+  .hint { margin: var(--s4) auto var(--s3); }
+
+  /* story → bottom sheet over the game */
+  .story {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    width: auto;
+    max-height: 80dvh;
+    overflow-y: auto;
+    padding:
+      var(--s4)
+      calc(var(--s3) + env(safe-area-inset-right))
+      calc(var(--s3) + env(safe-area-inset-bottom))
+      calc(var(--s3) + env(safe-area-inset-left));
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -8px 32px rgba(31, 29, 27, 0.28);
+    /* slides in once the stitches are sewn (delay set in ui.js) */
+    animation: sheet-in 0.3s ease var(--sheet-delay, 0ms) both;
+  }
+  .story__close { display: grid; }
+  .story__eyebrow,
+  .story__title { padding-right: 44px; }
+
   .deco { display: none; }
+}
+
+/* short phones (iPhone SE with Safari's bars): every pixel goes to the board */
+@media (max-width: 640px) and (max-height: 600px) {
+  .header { padding-top: calc(6px + env(safe-area-inset-top)); padding-bottom: 6px; }
+  .brand__title { font-size: 20px; }
+  .segmented button,
+  .levels button { padding-top: var(--s1); padding-bottom: var(--s1); }
+  /* the size line stays for screen readers; "locked" still shows as the faded button */
+  .segmented small {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 
 /* The universal selector alone loses to more specific rules
@@ -644,8 +851,10 @@ body { position: relative; z-index: 0; }
   }
   body,
   .header,
-  .clue,
-  .btn { transition: none; }
-  .board.is-won .cell.is-filled { animation: none; }
+  .board,
+  .board *,
+  .btn { transition: none; }   /* .board: a 0.01ms "all" transition made fitBoard() measure stale cell sizes */
+  .board.is-won .cell.is-filled,
+  .story { animation: none; }
   .btn:active { transform: none; }
 }

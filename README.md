@@ -12,14 +12,15 @@
 
 A nonogram chart and a cross-stitch chart are the same thing: a square grid where each cell is either stitched or left as bare linen. **Stitch = pixel.** I built the game on that idea and on the two places it connects:
 
-- **Ukraine** — motifs from *vyshyvanka* embroidery and *pysanky*: *Wolf's teeth* (a protective border) and *Sown field* (a wish for a good harvest).
-- **València** — symbols of the city: the *orange* of l'Horta and the *rat penat*, the bat on the city's coat of arms.
+- **Ukraine** — motifs from *vyshyvanka* embroidery and *pysanky*: *Wolf's teeth* (a protective border), *Sown field* (a wish for a good harvest), *Rakes*, *Ram's horns*, the eight-pointed star, the little pine and the rose.
+- **València** — symbols of the city: the *orange* of l'Horta and the *rat penat*, the bat on the city's coat of arms, the fan of Aldaia, a Manises tile, the Micalet tower and the paella.
 
 The game uses the same pixel-and-thread language in its UI: a pixel typeface, a grid on linen, and a cross-stitch reveal when you win.
 
 ## Features
 
-- Two collections (Ukraine, València) with **easy 5×5** and **medium 10×10** puzzles. **Hard 15×15** is locked and shows a visible “coming soon” label.
+- Two collections (Ukraine, València) with **13 puzzles**: several **easy 5×5** and **medium 10×10** puzzles per collection. **Hard 15×15** is locked and shows a visible “coming soon” label.
+- **Progress dots** under the level switch: one dot per puzzle — filled when solved, a ring around the current one. Tap a dot to open that puzzle. **Next puzzle** goes to the next unsolved puzzle in the level, then to the next level. Revealing the solution does not count as solved.
 - Every puzzle is checked by a solver to have **exactly one solution**.
 - **Three languages**: English, Valencian, Ukrainian. All UI strings live in one file, `src/i18n.js`. On the first visit the language follows the browser.
 - **Two palettes per collection**: a native one and an alternative one, toggled with the sun button.
@@ -28,6 +29,7 @@ The game uses the same pixel-and-thread language in its UI: a pixel typeface, a 
 - Solved rows and columns fade their clues. The row and column under the pointer are highlighted.
 - **Check** outlines and hatches wrong cells, and says “no mistakes so far” or “N mistakes”. The message is also announced to screen readers.
 - Timer and best time per puzzle.
+- **Phones**: the game fits one screen (`100dvh`, safe areas for the notch and the home bar). The board is sized from the space that is really left, width and height. The controls sit in one row at the bottom, in thumb reach, and the story opens as a bottom sheet over the game.
 - **Progress saves automatically**: the board on every move, the timer every 5 s and when the tab is closed. Language, palette and sound settings are remembered too.
 - **Win animation**: the stitches “sew in” diagonally. With `prefers-reduced-motion` they appear without animation.
 - Optional 8-bit click sound, off by default.
@@ -118,14 +120,16 @@ Then open http://localhost:8000. Any static server works.
 
 ## Adding puzzles (and unlocking hard 15×15)
 
-1. Open `src/puzzles.js` and add a `hard` entry to a collection, in the same format as the others. `grid` is 15 strings of 15 characters, with `#` for a stitch and `.` for empty.
+Every level is a **list** of puzzles. To add one to easy or medium, append it to the end of that list (progress is saved by position, so don't reorder existing puzzles).
+
+1. Open `src/puzzles.js` and add a `hard: [ … ]` list to a collection, in the same format as the others. `grid` is 15 strings of 15 characters, with `#` for a stitch and `.` for empty.
 2. Run the checker:
 
    ```bash
    npm run check
    ```
 
-   It checks the size, the characters, the texts in all three languages, and that the clues have **exactly one solution**. If anything fails, it exits with code 1.
+   It checks the size, the characters, the texts in all three languages, that no grid is used twice, and that the clues have **exactly one solution**. If anything fails, it exits with code 1.
 3. That's it: the **hard** button unlocks by itself for that collection. Collections without a hard puzzle keep showing “coming soon”.
 
 ## Publishing on GitHub Pages

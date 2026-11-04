@@ -2,7 +2,7 @@
 <html lang="en" data-collection="ua">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Punt — a nonogram game</title>
 <meta name="description" content="Punt — a nonogram game where every cell is a stitch. Ukrainian embroidery motifs and València symbols.">
 <meta name="theme-color" content="#c4452d">
@@ -27,6 +27,8 @@
 </head>
 <body>
 
+<!-- header + game: on phones this block is exactly one screen high -->
+<div class="app">
 <header class="header">
   <div class="brand">
     <h1 class="brand__title">PUNT</h1>
@@ -67,9 +69,14 @@
     <button data-level="hard" aria-pressed="false"><span data-i18n="hard">hard</span><small>15×15</small></button>
   </nav>
 
-  <div class="status">
-    <span class="timer" id="timer">00:00</span>
-    <span class="best" id="best"></span>
+  <!-- dots + timer: two rows on larger screens, one row on phones -->
+  <div class="meta">
+    <nav class="dots" id="dots" data-i18n-label="puzzles" aria-label="Puzzles in this level"></nav>
+
+    <div class="status">
+      <span class="timer" id="timer">00:00</span>
+      <span class="best" id="best"></span>
+    </div>
   </div>
 
   <div class="stage" id="stage">
@@ -79,7 +86,10 @@
       <div class="cells" id="cells" aria-describedby="keysHelp"></div>
     </div>
 
-    <aside class="story" id="story" hidden>
+    <aside class="story" id="story" tabindex="-1" aria-labelledby="storyTitle" hidden>
+      <button class="story__close" id="storyClose" data-i18n-label="close" aria-label="Close">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.5"/></svg>
+      </button>
       <p class="story__eyebrow" id="storyEyebrow"></p>
       <h2 class="story__title" id="storyTitle"></h2>
       <p class="story__native" id="storyNative"></p>
@@ -98,16 +108,24 @@
       </button>
     </div>
     <button class="btn btn--primary" id="checkBtn" data-i18n="check">check</button>
-    <button class="btn btn--ghost" id="resetBtn" data-i18n="reset">reset</button>
-    <button class="btn btn--ghost" id="solveBtn" data-i18n="solution">solution</button>
+    <!-- icon + caption on phones, plain text button on larger screens -->
+    <button class="btn btn--ghost btn--icon" id="resetBtn" data-i18n-label="reset" aria-label="reset">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2h2v1h1v1h1v2H1V4h1V3h1zM6 2h5v2H6zM11 4h2v2h-2zM12 6h2v4h-2zM11 10h2v2h-2zM5 12h6v2H5zM3 10h2v2H3zM2 6h2v4H2z"/></svg>
+      <span data-i18n="reset">reset</span>
+    </button>
+    <button class="btn btn--ghost btn--icon" id="solveBtn" data-i18n-label="solution" aria-label="solution">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 3h6v2H5zM3 5h2v2H3zM11 5h2v2h-2zM1 7h2v2H1zM13 7h2v2h-2zM3 9h2v2H3zM11 9h2v2h-2zM5 11h6v2H5zM6 6h4v4H6z"/></svg>
+      <span data-i18n="solution">solution</span>
+    </button>
   </div>
 
   <p class="feedback" id="feedback" role="status"></p>
   <p class="sr-only" id="announce" aria-live="polite"></p>
   <p class="sr-only" id="keysHelp" data-i18n="keys">arrow keys move · enter or space fills · x marks empty</p>
-
-  <p class="hint" id="hint" data-i18n="hint">click to fill · right-click to mark · drag to paint · progress saves automatically</p>
 </main>
+</div>
+
+<p class="hint" id="hint" data-i18n="hint">click to fill · right-click to mark · drag to paint · progress saves automatically</p>
 
 <footer class="footer"><span data-i18n="madeBy">made by</span> <a href="https://va-pavlova.com" data-i18n="author">valeria pavlova</a></footer>
 </body>

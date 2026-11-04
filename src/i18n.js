@@ -26,6 +26,8 @@ export const STRINGS = {
     noErrors: "no mistakes so far",
     mistakes: (n) => `${n} ${n === 1 ? "mistake" : "mistakes"}`,
     cell: (r, c) => `Row ${r}, column ${c}`,
+    puzzles: "Puzzles in this level",
+    dotLabel: (i, n) => `Puzzle ${i} of ${n}`, dotSolved: "solved", dotUnsolved: "not solved yet", close: "Close",
     title: "Punt — a nonogram game"
   },
   ca: {
@@ -44,6 +46,8 @@ export const STRINGS = {
     noErrors: "de moment, cap error",
     mistakes: (n) => `${n} ${n === 1 ? "error" : "errors"}`,
     cell: (r, c) => `Fila ${r}, columna ${c}`,
+    puzzles: "Nonogrames d'aquest nivell",
+    dotLabel: (i, n) => `Nonograma ${i} de ${n}`, dotSolved: "resolt", dotUnsolved: "encara sense resoldre", close: "Tanca",
     title: "Punt — un joc de nonogrames"
   },
   uk: {
@@ -62,6 +66,8 @@ export const STRINGS = {
     noErrors: "поки без помилок",
     mistakes: (n) => `${n} ${ukPlural(n, "помилка", "помилки", "помилок")}`,
     cell: (r, c) => `Рядок ${r}, стовпець ${c}`,
+    puzzles: "Нонограми цього рівня",
+    dotLabel: (i, n) => `Нонограма ${i} з ${n}`, dotSolved: "розв'язана", dotUnsolved: "ще не розв'язана", close: "Закрити",
     title: "Punt — гра-нонограма"
   }
 };
