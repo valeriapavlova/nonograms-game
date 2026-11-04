@@ -203,6 +203,16 @@ $("solveBtn").addEventListener("click", () => {
 
 $("nextBtn").addEventListener("click", () => open(...nextPuzzle()));
 
+/* phone bottom sheet: close with × or Escape, focus goes back to the board */
+function closeStory() {
+  if ($("story").hidden) return;
+  ui.hideStory();
+  const cell = $("cells").querySelector('[tabindex="0"]');
+  if (cell) cell.focus({ preventScroll: true });
+}
+$("storyClose").addEventListener("click", closeStory);
+$("story").addEventListener("keydown", (e) => { if (e.key === "Escape") closeStory(); });
+
 document.querySelectorAll("button[data-collection]").forEach((b) =>
   b.addEventListener("click", () => {
     const c = b.dataset.collection;

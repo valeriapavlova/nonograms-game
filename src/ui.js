@@ -37,7 +37,46 @@ export function renderBoard(game) {
     }
   }
   paintAll(game);
+  fitBoard();
 }
+
+/* phones: the cell size comes from the space the stage really has
+   (width AND height). Clue sizes depend on the cell size, so measure,
+   scale, and measure again. Larger screens keep the CSS formula. */
+const phone = window.matchMedia("(max-width: 640px)");
+const MAX_BOARD = 360;   /* same cap as the desktop formula */
+
+export function fitBoard() {
+  const board = $("board");
+  const stage = $("stage");
+  board.style.removeProperty("--cell");
+  if (!phone.matches) return;
+  const n = +getComputedStyle(board).getPropertyValue("--n") || 5;
+  /* leave room for the clue rings and focus outlines around the board */
+  const w = stage.clientWidth - 8;
+  const h = stage.clientHeight - 8;
+  if (w <= 0 || h <= 0) return;
+  let cell = MAX_BOARD / n;
+  for (let k = 0; k < 4; k++) {
+    board.style.setProperty("--cell", `${cell}px`);
+    const box = board.getBoundingClientRect();
+    const scale = Math.min(w / box.width, h / box.height);
+    if (scale >= 1 && k > 0) break;
+    cell = Math.min(MAX_BOARD / n, cell * scale);
+  }
+  /* whole pixels keep the grid lines crisp */
+  board.style.setProperty("--cell", `${Math.max(12, Math.floor(cell))}px`);
+}
+
+if (typeof ResizeObserver !== "undefined") {
+  let raf;
+  new ResizeObserver(() => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(fitBoard);
+  }).observe($("stage"));
+}
+phone.addEventListener("change", fitBoard);
+if (document.fonts) document.fonts.ready.then(fitBoard);
 
 export const cellEl = (game, r, c) => $("cells").children[r * game.n + c];
 
@@ -115,6 +154,8 @@ export function showStory(game, revealed) {
   announce(`${$("storyEyebrow").textContent}. ${$("storyTitle").textContent}`);
   $("story").hidden = false;
   $("stage").classList.add("has-story");
+  /* on phones the card is a sheet over the game: move focus into it */
+  if (phone.matches) $("story").focus({ preventScroll: true });
 }
 
 export function hideStory() {
