@@ -1,6 +1,14 @@
 /* =========================================================
    INTERFACE TEXT — en · ca (Valencian) · uk
    ========================================================= */
+/* 1 помилка · 2–4 помилки · 5+ помилок */
+const ukPlural = (n, one, few, many) => {
+  const d = n % 10, h = n % 100;
+  if (d === 1 && h !== 11) return one;
+  if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return few;
+  return many;
+};
+
 export const STRINGS = {
   en: {
     tagline: "stitch by stitch, from Ukraine to València",
@@ -12,6 +20,11 @@ export const STRINGS = {
     solvedIn: "solved in", best: "best",
     altColors: "Alternative colors", sound: "Sound", collection: "Collection", level: "Level",
     board: "Puzzle board", tool: "Tool", fill: "Fill cell", mark: "Mark empty",
+    hintTouch: "tap to fill · long-press or × tool to mark · drag to paint · progress saves automatically",
+    keys: "arrow keys move · enter or space fills · x marks empty",
+    filled: "filled", marked: "marked empty", empty: "empty",
+    noErrors: "no mistakes so far",
+    mistakes: (n) => `${n} ${n === 1 ? "mistake" : "mistakes"}`,
     cell: (r, c) => `Row ${r}, column ${c}`,
     title: "Punt — a nonogram game"
   },
@@ -25,6 +38,11 @@ export const STRINGS = {
     solvedIn: "resolt en", best: "millor",
     altColors: "Colors alternatius", sound: "So", collection: "Col·lecció", level: "Nivell",
     board: "Tauler", tool: "Eina", fill: "Omplir casella", mark: "Marcar buida",
+    hintTouch: "toca per a omplir · mantín premut o eina × per a marcar · arrossega per a pintar · el progrés es guarda sol",
+    keys: "fletxes per a moure't · intro o espai omplin · x marca buida",
+    filled: "plena", marked: "marcada buida", empty: "buida",
+    noErrors: "de moment, cap error",
+    mistakes: (n) => `${n} ${n === 1 ? "error" : "errors"}`,
     cell: (r, c) => `Fila ${r}, columna ${c}`,
     title: "Punt — un joc de nonogrames"
   },
@@ -38,6 +56,11 @@ export const STRINGS = {
     solvedIn: "розв'язано за", best: "рекорд",
     altColors: "Інші кольори", sound: "Звук", collection: "Колекція", level: "Рівень",
     board: "Поле гри", tool: "Інструмент", fill: "Заповнити клітинку", mark: "Позначити порожню",
+    hintTouch: "тап — заповнити · довге натискання або × — позначити · тягни, щоб малювати · прогрес зберігається сам",
+    keys: "стрілки — рух · enter або пробіл — заповнити · x — позначити порожню",
+    filled: "заповнена", marked: "позначена порожньою", empty: "порожня",
+    noErrors: "поки без помилок",
+    mistakes: (n) => `${n} ${ukPlural(n, "помилка", "помилки", "помилок")}`,
     cell: (r, c) => `Рядок ${r}, стовпець ${c}`,
     title: "Punt — гра-нонограма"
   }

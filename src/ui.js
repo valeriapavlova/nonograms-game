@@ -31,7 +31,6 @@ export function renderBoard(game) {
       b.dataset.r = r;
       b.dataset.c = c;
       b.style.setProperty("--d", `${(r + c) * 35}ms`);
-      b.setAttribute("aria-label", t("cell")(r + 1, c + 1));
       b.tabIndex = r === 0 && c === 0 ? 0 : -1;
       cells.appendChild(b);
     }
@@ -46,7 +45,9 @@ export function paintCell(game, r, c) {
   const v = game.get(r, c);
   el.classList.toggle("is-filled", v === FILLED);
   el.classList.toggle("is-marked", v === MARKED);
-  el.setAttribute("aria-pressed", v === FILLED ? "true" : "false");
+  /* three states, so the state goes into the label instead of aria-pressed */
+  const state = v === FILLED ? "filled" : v === MARKED ? "marked" : "empty";
+  el.setAttribute("aria-label", `${t("cell")(r + 1, c + 1)}, ${t(state)}`);
 }
 
 export function paintAll(game) {
@@ -71,6 +72,26 @@ export function flashWrong(game, cells) {
   setTimeout(() => document.querySelectorAll(".is-wrong").forEach((x) => x.classList.remove("is-wrong")), 1400);
 }
 
+/* "check" result: visible line + polite announcement (role="status") */
+let feedbackTimer;
+export function showFeedback(text) {
+  const el = $("feedback");
+  el.textContent = text;
+  clearTimeout(feedbackTimer);
+  feedbackTimer = setTimeout(() => { el.textContent = ""; }, 3000);
+}
+export function clearFeedback() {
+  clearTimeout(feedbackTimer);
+  $("feedback").textContent = "";
+}
+
+/* screen-reader only announcement (the timer itself is not live) */
+export function announce(text) {
+  const el = $("announce");
+  el.textContent = "";
+  requestAnimationFrame(() => { el.textContent = text; });
+}
+
 export const setWon = (on) => $("board").classList.toggle("is-won", on);
 
 export const showTime = (s) => { $("timer").textContent = fmt(s); };
@@ -90,6 +111,7 @@ export function fillStory(game, revealed) {
 
 export function showStory(game, revealed) {
   fillStory(game, revealed);
+  announce(`${$("storyEyebrow").textContent}. ${$("storyTitle").textContent}`);
   $("story").hidden = false;
   $("stage").classList.add("has-story");
 }

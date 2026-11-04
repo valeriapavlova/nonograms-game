@@ -53,19 +53,19 @@
     <button data-level="hard" aria-pressed="false"><span data-i18n="hard">hard</span><small>15×15</small></button>
   </nav>
 
-  <div class="status" aria-live="polite">
+  <div class="status">
     <span class="timer" id="timer">00:00</span>
     <span class="best" id="best"></span>
   </div>
 
   <div class="stage" id="stage">
-    <div class="board" id="board" data-i18n-label="board" aria-label="Puzzle board">
+    <div class="board" id="board" role="group" data-i18n-label="board" aria-label="Puzzle board">
       <div class="clues-col" id="cluesCol"></div>
       <div class="clues-row" id="cluesRow"></div>
-      <div class="cells" id="cells" role="grid"></div>
+      <div class="cells" id="cells" aria-describedby="keysHelp"></div>
     </div>
 
-    <aside class="story" id="story" hidden aria-live="polite">
+    <aside class="story" id="story" hidden>
       <p class="story__eyebrow" id="storyEyebrow"></p>
       <h2 class="story__title" id="storyTitle"></h2>
       <p class="story__native" id="storyNative"></p>
@@ -88,7 +88,11 @@
     <button class="btn btn--ghost" id="solveBtn" data-i18n="solution">solution</button>
   </div>
 
-  <p class="hint" data-i18n="hint">click to fill · right-click to mark · drag to paint · progress saves automatically</p>
+  <p class="feedback" id="feedback" role="status"></p>
+  <p class="sr-only" id="announce" aria-live="polite"></p>
+  <p class="sr-only" id="keysHelp" data-i18n="keys">arrow keys move · enter or space fills · x marks empty</p>
+
+  <p class="hint" id="hint" data-i18n="hint">click to fill · right-click to mark · drag to paint · progress saves automatically</p>
 </main>
 
 <footer class="footer"><span data-i18n="madeBy">made by</span> <a href="https://va-pavlova.com" data-i18n="author">valeria pavlova</a></footer>

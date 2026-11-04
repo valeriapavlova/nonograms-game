@@ -1,7 +1,7 @@
 /* Entry point: state + event wiring */
 import { Game, FILLED, MARKED, EMPTY } from "./game.js";
 import { getPuzzle, hasPuzzle, ORDER } from "./puzzles.js";
-import { setLang, initialLang } from "./i18n.js";
+import { setLang, initialLang, t } from "./i18n.js";
 import { store, loadProgress, saveProgress, clearProgress, loadBest, saveBest } from "./storage.js";
 import * as ui from "./ui.js";
 
@@ -14,16 +14,27 @@ let tool = FILLED;       // active tool
 let painting = null;     // value being painted during a drag
 let timerId = null;
 let revealed = false;
-let sound = false;
+let sound = store.get("punt:sound") === true;
+let longPress = null;    // touch: timer that turns a tap into a mark
+
+const SAVE_EVERY = 5;    // seconds between autosaves of the timer
+const LONG_PRESS_MS = 450;
 
 /* ---------- build ---------- */
+/* keep the clock when leaving a puzzle unfinished */
+function saveNow() {
+  if (game && !game.won && timerId) saveProgress(collection, level, game.snapshot());
+}
+
 function load() {
+  saveNow();
   game = new Game(getPuzzle(collection, level), loadProgress(collection, level));
   revealed = false;
   document.documentElement.dataset.collection = collection;
   stopTimer();
   ui.renderBoard(game);
   ui.hideStory();
+  ui.clearFeedback();
   ui.showBest(loadBest(collection, level));
   ui.showTime(game.seconds);
 }
@@ -62,20 +73,38 @@ cellsEl.addEventListener("pointerdown", (e) => {
   if (!el || game.won) return;
   e.preventDefault();
   const r = +el.dataset.r, c = +el.dataset.c;
+  const before = game.get(r, c);
   const t = e.button === 2 ? MARKED : tool;
-  painting = game.get(r, c) === t ? EMPTY : t;
+  painting = before === t ? EMPTY : t;
   setCell(r, c, painting);
+
+  /* touch: holding the first cell switches the stroke to "mark" */
+  if (e.pointerType === "touch" && tool === FILLED) {
+    longPress = { r, c, id: setTimeout(() => {
+      if (game.won) return;
+      painting = before === MARKED ? EMPTY : MARKED;
+      setCell(r, c, painting);
+      if (navigator.vibrate) navigator.vibrate(10);
+    }, LONG_PRESS_MS) };
+  }
 });
+
+function cancelLongPress() {
+  if (longPress) clearTimeout(longPress.id);
+  longPress = null;
+}
 
 window.addEventListener("pointermove", (e) => {
   const target = document.elementFromPoint(e.clientX, e.clientY);
   const el = target && target.closest ? target.closest(".cell") : null;
   ui.highlight(el);
   if (painting === null || !el) return;
+  if (longPress && (+el.dataset.r !== longPress.r || +el.dataset.c !== longPress.c)) cancelLongPress();
   setCell(+el.dataset.r, +el.dataset.c, painting);
 });
 
-window.addEventListener("pointerup", () => { painting = null; });
+window.addEventListener("pointerup", () => { painting = null; cancelLongPress(); });
+window.addEventListener("pointercancel", () => { painting = null; cancelLongPress(); });
 
 /* keyboard: arrows move, Enter/Space fill, X marks */
 cellsEl.addEventListener("keydown", (e) => {
@@ -106,12 +135,18 @@ function startTimer() {
   timerId = setInterval(() => {
     game.seconds++;
     ui.showTime(game.seconds);
+    if (game.seconds % SAVE_EVERY === 0) saveProgress(collection, level, game.snapshot());
   }, 1000);
 }
 function stopTimer() { clearInterval(timerId); timerId = null; }
 
 /* ---------- controls ---------- */
-$("checkBtn").addEventListener("click", () => ui.flashWrong(game, game.wrongCells()));
+$("checkBtn").addEventListener("click", () => {
+  if (game.won) return;
+  const wrong = game.wrongCells();
+  ui.flashWrong(game, wrong);
+  ui.showFeedback(wrong.length ? t("mistakes")(wrong.length) : t("noErrors"));
+});
 
 $("resetBtn").addEventListener("click", () => {
   clearProgress(collection, level);
@@ -165,9 +200,11 @@ $("themeBtn").addEventListener("click", () => {
 
 /* sound: tiny click, off by default */
 let audio;
+$("soundBtn").setAttribute("aria-pressed", sound);
 $("soundBtn").addEventListener("click", () => {
   sound = !sound;
   $("soundBtn").setAttribute("aria-pressed", sound);
+  store.set("punt:sound", sound);
 });
 function blip() {
   if (!sound) return;
@@ -193,6 +230,13 @@ document.querySelectorAll("[data-lang]").forEach((b) =>
     ui.syncTabs(collection, level);    /* "coming soon" label */
   })
 );
+
+/* save the clock when the tab is hidden or closed */
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveNow(); });
+window.addEventListener("pagehide", saveNow);
+
+/* touch screens get their own instructions */
+if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) $("hint").dataset.i18n = "hintTouch";
 
 setLang(initialLang());
 ui.syncTabs(collection, level);
