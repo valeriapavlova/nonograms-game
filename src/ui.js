@@ -1,6 +1,6 @@
 /* DOM rendering — reads the Game, never changes it */
 import { t, getLang } from "./i18n.js";
-import { fmt, FILLED, MARKED } from "./game.js";
+import { fmt, FILLED, MARKED, parseGrid, cluesFor } from "./game.js";
 import { LEVELS, hasPuzzle, puzzleList } from "./puzzles.js";
 import { isSolved } from "./storage.js";
 
@@ -10,10 +10,34 @@ const clueHTML = (clues, attr) => clues
   .map((c, i) => `<div class="clue" data-${attr}="${i}">${(c.length ? c : [0]).map((x) => `<span>${x}</span>`).join("")}</div>`)
   .join("");
 
-export function renderBoard(game) {
+/* the longest clues of a whole level: CSS reserves room for them,
+   so every puzzle of the level puts its grid in the same place */
+const clueSpace = new Map();
+function levelClueSpace(list) {
+  if (!clueSpace.has(list)) {
+    const space = { rcCount: 1, rcChars: 1, ccCount: 1 };
+    for (const p of list) {
+      const { rows, cols } = cluesFor(parseGrid(p.grid));
+      for (const r of rows) {
+        space.rcCount = Math.max(space.rcCount, r.length);
+        space.rcChars = Math.max(space.rcChars, r.join("").length);
+      }
+      for (const c of cols) space.ccCount = Math.max(space.ccCount, c.length);
+    }
+    clueSpace.set(list, space);
+  }
+  return clueSpace.get(list);
+}
+
+/* list = every puzzle of the level the game belongs to */
+export function renderBoard(game, list = [game.puzzle]) {
   const { n } = game;
   const board = $("board");
+  const space = levelClueSpace(list);
   board.style.setProperty("--n", n);
+  board.style.setProperty("--rc-count", space.rcCount);
+  board.style.setProperty("--rc-chars", space.rcChars);
+  board.style.setProperty("--cc-count", space.ccCount);
   board.classList.remove("is-won");
 
   $("cluesCol").innerHTML = clueHTML(game.colClues, "col");
@@ -42,9 +66,39 @@ export function renderBoard(game) {
 
 /* phones: the cell size comes from the space the stage really has
    (width AND height). Clue sizes depend on the cell size, so measure,
-   scale, and measure again. Larger screens keep the CSS formula. */
+   scale, and measure again. Larger screens keep the CSS formula.
+   The grid stays in the centre (row clues on its left, the same room
+   kept empty on its right) as long as that leaves cells of COMFORT px.
+   When it does not, the centre gives way: the grid moves right and
+   takes the room on the right, so the cells stay as big as possible. */
 const phone = window.matchMedia("(max-width: 640px)");
 const MAX_BOARD = 360;   /* same cap as the desktop formula */
+const COMFORT = 24;      /* the smallest cell a 10×10 board gets on an iPhone SE */
+
+function fitCell(n, w, h, centred) {
+  const board = $("board");
+  const max = Math.floor(MAX_BOARD / n);
+  const fits = (cell) => {
+    board.style.setProperty("--cell", `${cell}px`);
+    const clues = $("cluesRow").getBoundingClientRect().width;
+    const width = (centred ? 2 : 1) * clues + $("cells").getBoundingClientRect().width;
+    return width <= w && board.getBoundingClientRect().height <= h;
+  };
+  /* estimate by scaling, then settle on the largest whole pixel that fits,
+     so every puzzle of a level lands on exactly the same size */
+  let cell = max;
+  for (let k = 0; k < 3; k++) {
+    board.style.setProperty("--cell", `${cell}px`);
+    const clues = $("cluesRow").getBoundingClientRect().width;
+    const width = (centred ? 2 : 1) * clues + $("cells").getBoundingClientRect().width;
+    const scale = Math.min(w / width, h / board.getBoundingClientRect().height);
+    cell = Math.min(max, cell * scale);
+  }
+  cell = Math.max(12, Math.floor(cell));
+  while (cell > 12 && !fits(cell)) cell--;
+  while (cell < max && fits(cell + 1)) cell++;
+  return cell;
+}
 
 export function fitBoard() {
   const board = $("board");
@@ -56,16 +110,9 @@ export function fitBoard() {
   const w = stage.clientWidth - 2;
   const h = stage.clientHeight - 2;
   if (w <= 0 || h <= 0) return;
-  let cell = MAX_BOARD / n;
-  for (let k = 0; k < 4; k++) {
-    board.style.setProperty("--cell", `${cell}px`);
-    const box = board.getBoundingClientRect();
-    const scale = Math.min(w / box.width, h / box.height);
-    if (scale >= 1 && k > 0) break;
-    cell = Math.min(MAX_BOARD / n, cell * scale);
-  }
-  /* whole pixels keep the grid lines crisp */
-  board.style.setProperty("--cell", `${Math.max(12, Math.floor(cell))}px`);
+  const centred = fitCell(n, w, h, true);
+  const cell = centred >= COMFORT ? centred : fitCell(n, w, h, false);
+  board.style.setProperty("--cell", `${cell}px`);
 }
 
 if (typeof ResizeObserver !== "undefined") {

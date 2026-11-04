@@ -70,7 +70,7 @@ function load() {
   revealed = false;
   document.documentElement.dataset.collection = collection;
   stopTimer();
-  ui.renderBoard(game);
+  ui.renderBoard(game, puzzleList(collection, level));
   ui.hideStory();
   ui.clearFeedback();
   ui.showBest(loadBest(collection, level, index));
@@ -272,7 +272,7 @@ function blip() {
 document.querySelectorAll("[data-lang]").forEach((b) =>
   b.addEventListener("click", () => {
     setLang(b.dataset.lang);
-    ui.renderBoard(game);              /* cell labels */
+    ui.renderBoard(game, puzzleList(collection, level));   /* cell labels */
     if (game.won) { ui.setWon(true); ui.fillStory(game, revealed); }
     ui.showBest(loadBest(collection, level, index));
     ui.syncTabs(collection, level);    /* "coming soon" label */
