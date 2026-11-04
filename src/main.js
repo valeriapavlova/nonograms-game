@@ -55,6 +55,7 @@ function finish(wasRevealed) {
   revealed = wasRevealed;
   stopTimer();
   ui.setWon(true);
+  ui.highlight(null);                 /* drop the row/column rings */
   if (!wasRevealed) {
     saveBest(collection, level, game.seconds);
     ui.showBest(loadBest(collection, level));
@@ -97,7 +98,7 @@ function cancelLongPress() {
 window.addEventListener("pointermove", (e) => {
   const target = document.elementFromPoint(e.clientX, e.clientY);
   const el = target && target.closest ? target.closest(".cell") : null;
-  ui.highlight(el);
+  ui.highlight(game.won ? null : el);
   if (painting === null || !el) return;
   if (longPress && (+el.dataset.r !== longPress.r || +el.dataset.c !== longPress.c)) cancelLongPress();
   setCell(+el.dataset.r, +el.dataset.c, painting);
@@ -120,7 +121,7 @@ cellsEl.addEventListener("keydown", (e) => {
     const next = ui.cellEl(game, r, c);
     next.tabIndex = 0;
     next.focus();
-    ui.highlight(next);
+    ui.highlight(game.won ? null : next);
   } else if (e.key === "Enter" || e.key === " ") {
     e.preventDefault();
     setCell(r, c, game.get(r, c) === tool ? EMPTY : tool);
