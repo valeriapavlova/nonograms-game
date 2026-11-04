@@ -24,7 +24,8 @@ async function shot(browser, { width, height, scale = 1, collection, mode, level
     if (!mobile) await page.mouse.move(0, 0);
   }
   await page.evaluate(() => document.fonts.ready);
-  await page.screenshot({ path: out(file), fullPage: true });
+  /* phones: just the screen (the game fits it; the story is a sheet over it) */
+  await page.screenshot({ path: out(file), fullPage: !mobile });
   await page.close();
 }
 
