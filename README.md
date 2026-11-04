@@ -12,14 +12,14 @@
 
 A nonogram chart and a cross-stitch chart are the same thing: a square grid where each cell is either stitched or left as bare linen. **Stitch = pixel.** I built the game on that idea and on the two places it connects:
 
-- **Ukraine** — motifs from *vyshyvanka* embroidery and *pysanky*: *Wolf's teeth* (a protective border), *Sown field* (a wish for a good harvest), *Rakes*, *Ram's horns*, the eight-pointed star, the little pine and the rose.
-- **València** — symbols of the city: the *orange* of l'Horta and the *rat penat*, the bat on the city's coat of arms, the fan of Aldaia, a Manises tile, the Micalet tower and the paella.
+- **Ukraine** — motifs from *vyshyvanka* embroidery and *pysanky*: *Wolf's teeth* (a protective border), *Sown field* (a wish for a good harvest), *Rakes*, *Ram's horns*, the eight-pointed star, the little pine, the rose, the *Tree of life* and the *Peahen* of the rushnyky.
+- **València** — symbols of the city: the *orange* of l'Horta and the *rat penat*, the bat on the city's coat of arms, the fan of Aldaia, a Manises tile, the orange blossom, the Micalet tower, the paella, a *barraca* of l'Albufera and the Serranos Towers.
 
 The game uses the same pixel-and-thread language in its UI: a pixel typeface, a grid on linen, and a cross-stitch reveal when you win.
 
 ## Features
 
-- Two collections (Ukraine, València) with **13 puzzles**: several **easy 5×5** and **medium 10×10** puzzles per collection. **Hard 15×15** is locked and shows a visible “coming soon” label.
+- Two collections (Ukraine, València) with **18 puzzles**: 4 **easy 5×5**, 3 **medium 10×10** and 2 **hard 15×15** per collection.
 - **Progress dots** under the level switch: one dot per puzzle — filled when solved, a ring around the current one. Tap a dot to open that puzzle. **Next puzzle** goes to the next unsolved puzzle in the level, then to the next level. Revealing the solution does not count as solved.
 - Every puzzle is checked by a solver to have **exactly one solution**.
 - **Three languages**: English, Valencian, Ukrainian. All UI strings live in one file, `src/i18n.js`. On the first visit the language follows the browser.
@@ -29,10 +29,16 @@ The game uses the same pixel-and-thread language in its UI: a pixel typeface, a 
 - Solved rows and columns fade their clues. The row and column under the pointer are highlighted.
 - **Check** outlines and hatches wrong cells, and says “no mistakes so far” or “N mistakes”. The message is also announced to screen readers.
 - Timer and best time per puzzle.
-- **Phones**: the game fits one screen (`100dvh`, safe areas for the notch and the home bar). The board is sized from the space that is really left, width and height. Collection and level share one compact row (UA / VAL · 5 / 10 / 15), so a 10×10 board keeps cells of at least 24px even on an iPhone SE with Safari's bars. The controls sit in one row at the bottom, in thumb reach: ■/✕, then check, reset and solution as icons with captions (text on buttons is never under 12px). The story opens as a bottom sheet over the game.
+- **The grid stays in the centre**: the row clues hang to the left of the cell grid, so the grid itself sits in the middle of the screen. Room for the clues is reserved for the longest clues of the whole level, so the grid does not jump when you switch puzzles. On a narrow phone, when centring would make the cells smaller than 24px, the grid moves right only as far as it has to.
+- **Phones**: the game fits one screen (`100dvh`, safe areas for the notch and the home bar). The board is sized from the space that is really left, width and height. Collection and level share one compact row (UA / VAL · 5 / 10 / 15), so a 10×10 board keeps cells of at least 24px even on an iPhone SE with Safari's bars. On hard 15×15 the clues get compact spacing; the cells are 20px on an iPhone SE (17–18px while Safari's bars are showing). The controls sit in one row at the bottom, in thumb reach: ■/✕, then check, reset and solution as icons with captions (text on buttons is never under 12px). The story opens as a bottom sheet over the game.
 - **Progress saves automatically**: the board on every move, the timer every 5 s and when the tab is closed. Language, palette and sound settings are remembered too.
 - **Win animation**: the stitches “sew in” diagonally. With `prefers-reduced-motion` they appear without animation.
-- Optional 8-bit click sound, off by default.
+- **Sound** (Web Audio, no audio files), off by default: turn it on with the speaker button in the header; the choice is remembered. Volume stays low (master gain 0.15).
+  - fill a cell: a short soft stitch, like a needle through fabric
+  - mark ✕ or clear a cell: a quieter, muffled click
+  - a row or column is complete: a small bell
+  - mistakes after **check**: a low, short, soft tone
+  - win: a 1–2 s melody per collection — plucked, bandura-like for Ukraine; brighter bells for València
 
 <p>
   <img src="assets/screenshots/mobile-ukraine-alt.png" alt="Ukraine collection, alternative dark palette, on a phone" width="260">
@@ -84,7 +90,7 @@ Fixes I made along the way:
 
 - The board is a labelled group. Each cell is a `<button>` whose label includes its position and state, e.g. “Row 3, column 1, filled”.
 - The timer is not a live region, so it isn't read every second. Wins and check results are announced politely.
-- The locked hard level uses `aria-disabled` instead of `disabled`, so keyboard and screen reader users can still reach it and hear “coming soon”.
+- A level without puzzles uses `aria-disabled` instead of `disabled`, so keyboard and screen reader users can still reach it and hear “coming soon”.
 
 ## Stack
 
@@ -100,6 +106,7 @@ src/
   i18n.js               all interface strings (en · ca · uk)
   storage.js            localStorage (progress, best times, settings)
   ui.js                 rendering
+  sound.js              Web Audio sounds
 scripts/
   check-puzzles.js      verifies every puzzle has exactly one solution
   screenshots.cjs       renders README screenshots, OG image, PNG icons
@@ -118,11 +125,11 @@ npm start
 
 Then open http://localhost:8000. Any static server works.
 
-## Adding puzzles (and unlocking hard 15×15)
+## Adding puzzles
 
-Every level is a **list** of puzzles. To add one to easy or medium, append it to the end of that list (progress is saved by position, so don't reorder existing puzzles).
+Every level is a **list** of puzzles. To add one, append it to the end of that list (progress is saved by position, so don't reorder existing puzzles).
 
-1. Open `src/puzzles.js` and add a `hard: [ … ]` list to a collection, in the same format as the others. `grid` is 15 strings of 15 characters, with `#` for a stitch and `.` for empty.
+1. Open `src/puzzles.js` and add the puzzle in the same format as the others. `grid` is 5, 10 or 15 strings (easy, medium, hard) of as many characters, with `#` for a stitch and `.` for empty.
 2. Run the checker:
 
    ```bash
@@ -130,7 +137,7 @@ Every level is a **list** of puzzles. To add one to easy or medium, append it to
    ```
 
    It checks the size, the characters, the texts in all three languages, that no grid is used twice, and that the clues have **exactly one solution**. If anything fails, it exits with code 1.
-3. That's it: the **hard** button unlocks by itself for that collection. Collections without a hard puzzle keep showing “coming soon”.
+3. That's it. A level button unlocks by itself once its list has a puzzle; an empty level shows “coming soon”.
 
 ## Publishing on GitHub Pages
 
