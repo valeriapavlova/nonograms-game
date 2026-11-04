@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- Source of assets/og-image.png (1200×630). Re-render: node scripts/screenshots.cjs -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Punt — Open Graph image</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --linen: #f8f4ee; --ink: #282828; --muted: #6b5f53;
+    --red: #c4452d; --black-thread: #1f1d1b;
+    --navy: #4f5f7c; --linen-va: #e8d8c9; --orange: #f3701e;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .og {
+    width: 1200px; height: 630px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .half { position: relative; display: grid; place-items: center; }
+  .ua { background: var(--linen); border-top: 16px solid var(--red); }
+  .va { background: var(--navy); border-top: 16px solid var(--orange); }
+
+  .brand { position: absolute; top: 56px; left: 64px; color: var(--ink); }
+  .brand h1 { margin: 0; font: 400 72px/1 "Press Start 2P", monospace; letter-spacing: 0.08em; }
+  .brand p { margin: 20px 0 0; font-size: 20px; color: var(--muted); }
+
+  .label {
+    position: absolute; bottom: 48px; left: 64px;
+    font: 400 16px/1 "Press Start 2P", monospace; color: var(--muted);
+  }
+  .va .label { left: auto; right: 64px; color: #d0d9ec; }
+
+  .board {
+    --cell: 26px;
+    display: grid; grid-template-columns: repeat(var(--n), var(--cell));
+    padding: 10px; border-radius: 5px;
+    box-shadow: 0 8px 24px rgba(31, 29, 27, 0.14);
+  }
+  .ua .board { background: #fff; border: 3px solid var(--black-thread); margin-top: 150px; }
+  .va .board { --cell: 48px; background: var(--linen-va); border: 3px solid var(--ink); box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+  .board i { width: var(--cell); height: var(--cell); }
+  .board i.s {
+    background-image:
+      linear-gradient(45deg, transparent 40%, var(--t) 40% 60%, transparent 60%),
+      linear-gradient(-45deg, transparent 40%, var(--t) 40% 60%, transparent 60%);
+    background-size: 76% 76%; background-position: center; background-repeat: no-repeat;
+  }
+  .ua .board { --t: var(--red); }
+  .va .board { --t: var(--orange); }
+</style>
+</head>
+<body>
+<div class="og">
+  <section class="half ua">
+    <div class="brand">
+      <h1>PUNT</h1>
+      <p>a nonogram game · every cell is a stitch</p>
+    </div>
+    <div class="board" id="ua" style="--n:10"></div>
+    <span class="label">ukraine</span>
+  </section>
+  <section class="half va">
+    <div class="board" id="va" style="--n:5"></div>
+    <span class="label">valència</span>
+  </section>
+</div>
+<script>
+  /* same grids as src/puzzles.js: "Засіяне поле" and "Taronja" */
+  const grids = {
+    ua: ["....##....","...#..#...","..#.##.#..",".#.#..#.#.","#.#.##.#.#","#.#.##.#.#",".#.#..#.#.","..#.##.#..","...#..#...","....##...."],
+    va: ["..#..",".###.","#####","#####",".###."]
+  };
+  for (const [id, g] of Object.entries(grids))
+    document.getElementById(id).innerHTML = g.join("").split("").map((c) => `<i class="${c === "#" ? "s" : ""}"></i>`).join("");
+</script>
+</body>
+</html>
