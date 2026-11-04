@@ -1,14 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-collection="ua">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nonograms</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Punt</title>
+<meta name="description" content="Punt — a nonogram game where every cell is a stitch. Ukrainian embroidery motifs and València symbols.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="src/main.js"></script>
 </head>
 <body>
-    <div id="game-container"></div>
-    <script type="module" src="src/main.js"></script>
+
+<header class="header">
+  <div class="brand">
+    <h1 class="brand__title">PUNT</h1>
+    <p class="brand__tagline" data-i18n="tagline">stitch by stitch, from Ukraine to València</p>
+  </div>
+  <div class="header__tools">
+    <div class="lang" role="group" aria-label="Language">
+      <button data-lang="en" lang="en" aria-pressed="true">EN</button>
+      <button data-lang="ca" lang="ca" aria-pressed="false" title="Valencià">VAL</button>
+      <button data-lang="uk" lang="uk" aria-pressed="false" title="Українська">УКР</button>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-pressed="false" data-i18n-label="altColors" aria-label="Alternative colors">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 2h2v3h-2zM11 19h2v3h-2zM2 11h3v2H2zM19 11h3v2h-3zM8 8h8v8H8zM4.2 5.6l1.4-1.4 2.1 2.1-1.4 1.4zM16.3 17.7l1.4-1.4 2.1 2.1-1.4 1.4zM4.2 18.4l2.1-2.1 1.4 1.4-2.1 2.1zM16.3 6.3l2.1-2.1 1.4 1.4-2.1 2.1z"/></svg>
+    </button>
+    <button class="icon-btn" id="soundBtn" aria-pressed="false" data-i18n-label="sound" aria-label="Sound">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3zM15 9h2v6h-2zM18 7h2v10h-2z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="deco" aria-hidden="true">
+    <span style="top:6%;left:4%"></span><span style="top:6%;left:calc(4% + 24px)"></span><span style="top:calc(6% + 24px);left:4%"></span>
+    <span style="top:40%;left:2%"></span><span style="top:calc(40% + 24px);left:calc(2% + 24px)"></span>
+    <span style="top:12%;right:5%"></span><span style="top:calc(12% + 24px);right:calc(5% + 24px)"></span><span style="top:calc(12% + 48px);right:5%"></span>
+    <span style="bottom:12%;right:3%"></span><span style="bottom:12%;right:calc(3% + 24px)"></span>
+    <span style="bottom:8%;left:8%"></span>
+  </div>
+
+  <nav class="segmented" data-i18n-label="collection" aria-label="Collection">
+    <button data-collection="ua" aria-pressed="true" data-i18n="ukraine">ukraine</button>
+    <button data-collection="va" aria-pressed="false" data-i18n="valencia">valència</button>
+  </nav>
+
+  <nav class="segmented levels" data-i18n-label="level" aria-label="Level">
+    <button data-level="easy" aria-pressed="true"><span data-i18n="easy">easy</span><small>5×5</small></button>
+    <button data-level="medium" aria-pressed="false"><span data-i18n="medium">medium</span><small>10×10</small></button>
+    <button data-level="hard" aria-pressed="false" disabled data-i18n-title="soon" title="Coming soon"><span data-i18n="hard">hard</span><small>15×15</small></button>
+  </nav>
+
+  <div class="status" aria-live="polite">
+    <span class="timer" id="timer">00:00</span>
+    <span class="best" id="best"></span>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="board" id="board" data-i18n-label="board" aria-label="Puzzle board">
+      <div class="clues-col" id="cluesCol"></div>
+      <div class="clues-row" id="cluesRow"></div>
+      <div class="cells" id="cells" role="grid"></div>
+    </div>
+
+    <aside class="story" id="story" hidden aria-live="polite">
+      <p class="story__eyebrow" id="storyEyebrow"></p>
+      <h2 class="story__title" id="storyTitle"></h2>
+      <p class="story__native" id="storyNative"></p>
+      <p class="story__text" id="storyText"></p>
+      <button class="btn btn--primary" id="nextBtn" data-i18n="next">next puzzle</button>
+    </aside>
+  </div>
+
+  <div class="controls">
+    <div class="mode" role="group" data-i18n-label="tool" aria-label="Tool">
+      <button id="modeFill" aria-pressed="true" data-i18n-label="fill" aria-label="Fill cell">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" fill="currentColor"/></svg>
+      </button>
+      <button id="modeMark" aria-pressed="false" data-i18n-label="mark" aria-label="Mark empty">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.5"/></svg>
+      </button>
+    </div>
+    <button class="btn btn--primary" id="checkBtn" data-i18n="check">check</button>
+    <button class="btn btn--ghost" id="resetBtn" data-i18n="reset">reset</button>
+    <button class="btn btn--ghost" id="solveBtn" data-i18n="solution">solution</button>
+  </div>
+
+  <p class="hint" data-i18n="hint">click to fill · right-click to mark · drag to paint · progress saves automatically</p>
+</main>
+
+<footer class="footer"><span data-i18n="madeBy">made by</span> <a href="https://va-pavlova.com" data-i18n="author">valeria pavlova</a></footer>
 </body>
 </html>

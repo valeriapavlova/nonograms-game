@@ -1,12 +1,11 @@
 {
-  "name": "nonograms-game",
+  "name": "punt",
   "version": "1.0.0",
-  "description": "Este proyecto es una implementación del clásico juego de Nonograms, también conocido como Picross o Griddlers. El juego consiste en llenar una cuadrícula de acuerdo con pistas numéricas que indican cuántas celdas deben ser llenadas en cada fila y columna.",
-  "main": "index.js",
+  "description": "Punt — a nonogram game where every cell is a cross-stitch. Ukraine and València collections.",
+  "type": "module",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "python3 -m http.server 8000"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "Valeria Pavlova"
 }
