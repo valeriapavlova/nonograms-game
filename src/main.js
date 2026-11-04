@@ -4,6 +4,7 @@ import { getPuzzle, hasPuzzle, puzzleList, ORDER } from "./puzzles.js";
 import { setLang, initialLang, t } from "./i18n.js";
 import { store, loadProgress, saveProgress, clearProgress, loadBest, saveBest, isSolved, loadPositions, savePositions, migrateSingleLevels } from "./storage.js";
 import * as ui from "./ui.js";
+import { setSoundOn, unlockSound, playSound } from "./sound.js";
 
 const { $ } = ui;
 
@@ -81,13 +82,15 @@ function load() {
 
 /* ---------- play ---------- */
 function setCell(r, c, v) {
+  const rowWas = game.rowDone(r), colWas = game.colDone(c);
   if (!game.set(r, c, v)) return;
   ui.paintCell(game, r, c);
   ui.updateClues(game);
   startTimer();
-  blip();
   saveProgress(collection, level, index, game.snapshot());
-  if (game.isSolved()) finish(false);
+  if (game.isSolved()) { finish(false); return; }          /* plays the win melody */
+  if ((!rowWas && game.rowDone(r)) || (!colWas && game.colDone(c))) playSound("line");
+  else playSound(v === FILLED ? "fill" : "mark");          /* ✕ and clearing share the soft click */
 }
 
 function finish(wasRevealed) {
@@ -97,6 +100,7 @@ function finish(wasRevealed) {
   ui.setWon(true);
   ui.highlight(null);                 /* drop the row/column rings */
   if (!wasRevealed) {
+    playSound("win", collection);
     saveBest(collection, level, index, game.seconds);
     ui.showBest(loadBest(collection, level, index));
     ui.renderDots(collection, level, index);
@@ -187,6 +191,7 @@ $("checkBtn").addEventListener("click", () => {
   if (game.won) return;
   const wrong = game.wrongCells();
   ui.flashWrong(game, wrong);
+  if (wrong.length) playSound("error");
   ui.showFeedback(wrong.length ? t("mistakes")(wrong.length) : t("noErrors"));
 });
 
@@ -247,28 +252,18 @@ $("themeBtn").addEventListener("click", () => {
   setPalette(document.documentElement.dataset.mode === "alt" ? "native" : "alt");
 });
 
-/* sound: tiny click, off by default */
-let audio;
+/* sound: off by default, the choice is remembered (sounds in sound.js) */
+setSoundOn(sound);
 $("soundBtn").setAttribute("aria-pressed", sound);
 $("soundBtn").addEventListener("click", () => {
   sound = !sound;
+  setSoundOn(sound);
   $("soundBtn").setAttribute("aria-pressed", sound);
   store.set("punt:sound", sound);
+  playSound("fill");                   /* a stitch to say "sound is on" */
 });
-function blip() {
-  if (!sound) return;
-  try {
-    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-    const o = audio.createOscillator(), g = audio.createGain();
-    o.type = "square";
-    o.frequency.value = 660;
-    g.gain.setValueAtTime(0.04, audio.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.06);
-    o.connect(g).connect(audio.destination);
-    o.start();
-    o.stop(audio.currentTime + 0.06);
-  } catch (e) { /* no audio */ }
-}
+/* browsers (iOS above all) only start audio from a user gesture */
+["pointerup", "keydown"].forEach((type) => document.addEventListener(type, unlockSound));
 
 document.querySelectorAll("[data-lang]").forEach((b) =>
   b.addEventListener("click", () => {
