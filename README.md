@@ -29,7 +29,7 @@ The game uses the same pixel-and-thread language in its UI: a pixel typeface, a 
 - Solved rows and columns fade their clues. The row and column under the pointer are highlighted.
 - **Check** outlines and hatches wrong cells, and says “no mistakes so far” or “N mistakes”. The message is also announced to screen readers.
 - Timer and best time per puzzle.
-- **Phones**: the game fits one screen (`100dvh`, safe areas for the notch and the home bar). The board is sized from the space that is really left, width and height. The controls sit in one row at the bottom, in thumb reach, and the story opens as a bottom sheet over the game.
+- **Phones**: the game fits one screen (`100dvh`, safe areas for the notch and the home bar). The board is sized from the space that is really left, width and height. Collection and level share one compact row (UA / VAL · 5 / 10 / 15), so a 10×10 board keeps cells of at least 24px even on an iPhone SE with Safari's bars. The controls sit in one row at the bottom, in thumb reach: ■/✕, then check, reset and solution as icons with captions (text on buttons is never under 12px). The story opens as a bottom sheet over the game.
 - **Progress saves automatically**: the board on every move, the timer every 5 s and when the tab is closed. Language, palette and sound settings are remembered too.
 - **Win animation**: the stitches “sew in” diagonally. With `prefers-reduced-motion` they appear without animation.
 - Optional 8-bit click sound, off by default.

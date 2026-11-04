@@ -52,9 +52,9 @@ export function fitBoard() {
   board.style.removeProperty("--cell");
   if (!phone.matches) return;
   const n = +getComputedStyle(board).getPropertyValue("--n") || 5;
-  /* leave room for the clue rings and focus outlines around the board */
-  const w = stage.clientWidth - 8;
-  const h = stage.clientHeight - 8;
+  /* a hair of slack for rounding; clue rings may spill into the gaps around */
+  const w = stage.clientWidth - 2;
+  const h = stage.clientHeight - 2;
   if (w <= 0 || h <= 0) return;
   let cell = MAX_BOARD / n;
   for (let k = 0; k < 4; k++) {
