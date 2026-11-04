@@ -1,14 +1,15 @@
 /* Entry point: state + event wiring */
 import { Game, FILLED, MARKED, EMPTY } from "./game.js";
-import { getPuzzle, hasPuzzle, ORDER } from "./puzzles.js";
+import { getPuzzle, hasPuzzle, puzzleList, ORDER } from "./puzzles.js";
 import { setLang, initialLang, t } from "./i18n.js";
-import { store, loadProgress, saveProgress, clearProgress, loadBest, saveBest } from "./storage.js";
+import { store, loadProgress, saveProgress, clearProgress, loadBest, saveBest, isSolved, loadPositions, savePositions, migrateSingleLevels } from "./storage.js";
 import * as ui from "./ui.js";
 
 const { $ } = ui;
 
 let collection = "ua";
 let level = "easy";
+let index = 0;           // position of the puzzle in its level's list
 let game;
 let tool = FILLED;       // active tool
 let painting = null;     // value being painted during a drag
@@ -23,20 +24,58 @@ const LONG_PRESS_MS = 450;
 /* ---------- build ---------- */
 /* keep the clock when leaving a puzzle unfinished */
 function saveNow() {
-  if (game && !game.won && timerId) saveProgress(collection, level, game.snapshot());
+  if (game && !game.won && timerId) saveProgress(collection, level, index, game.snapshot());
+}
+
+const firstUnsolved = (c, l) => puzzleList(c, l).findIndex((_, i) => !isSolved(c, l, i));
+
+/* the puzzle to open for a level: the one played last, else the first unsolved */
+function startIndex(c, l) {
+  const saved = loadPositions()[`${c}:${l}`];
+  if (Number.isInteger(saved) && saved < puzzleList(c, l).length) return saved;
+  return Math.max(0, firstUnsolved(c, l));
+}
+
+/* "next puzzle": next unsolved in this level, then the next level with one left */
+function nextPuzzle() {
+  const list = puzzleList(collection, level);
+  for (let k = 1; k < list.length; k++) {
+    const i = (index + k) % list.length;
+    if (!isSolved(collection, level, i)) return [collection, level, i];
+  }
+  const at = ORDER.findIndex(([c, l]) => c === collection && l === level);
+  for (let k = 1; k < ORDER.length; k++) {
+    const [c, l] = ORDER[(at + k) % ORDER.length];
+    const i = firstUnsolved(c, l);
+    if (i >= 0) return [c, l, i];
+  }
+  /* everything is solved: just keep going in order */
+  if (index + 1 < list.length) return [collection, level, index + 1];
+  return [...ORDER[(at + 1) % ORDER.length], 0];
+}
+
+/* switch puzzle; every argument is optional */
+function open(c = collection, l = level, i = startIndex(c, l)) {
+  saveNow();
+  collection = c;
+  level = l;
+  index = i;
+  savePositions({ ...loadPositions(), [`${c}:${l}`]: i });
+  ui.syncTabs(collection, level);
+  load();
 }
 
 function load() {
-  saveNow();
-  game = new Game(getPuzzle(collection, level), loadProgress(collection, level));
+  game = new Game(getPuzzle(collection, level, index), loadProgress(collection, level, index));
   revealed = false;
   document.documentElement.dataset.collection = collection;
   stopTimer();
   ui.renderBoard(game);
   ui.hideStory();
   ui.clearFeedback();
-  ui.showBest(loadBest(collection, level));
+  ui.showBest(loadBest(collection, level, index));
   ui.showTime(game.seconds);
+  ui.renderDots(collection, level, index);
 }
 
 /* ---------- play ---------- */
@@ -46,7 +85,7 @@ function setCell(r, c, v) {
   ui.updateClues(game);
   startTimer();
   blip();
-  saveProgress(collection, level, game.snapshot());
+  saveProgress(collection, level, index, game.snapshot());
   if (game.isSolved()) finish(false);
 }
 
@@ -57,10 +96,11 @@ function finish(wasRevealed) {
   ui.setWon(true);
   ui.highlight(null);                 /* drop the row/column rings */
   if (!wasRevealed) {
-    saveBest(collection, level, game.seconds);
-    ui.showBest(loadBest(collection, level));
+    saveBest(collection, level, index, game.seconds);
+    ui.showBest(loadBest(collection, level, index));
+    ui.renderDots(collection, level, index);
   }
-  clearProgress(collection, level);
+  clearProgress(collection, level, index);
   ui.showStory(game, wasRevealed);
 }
 
@@ -136,7 +176,7 @@ function startTimer() {
   timerId = setInterval(() => {
     game.seconds++;
     ui.showTime(game.seconds);
-    if (game.seconds % SAVE_EVERY === 0) saveProgress(collection, level, game.snapshot());
+    if (game.seconds % SAVE_EVERY === 0) saveProgress(collection, level, index, game.snapshot());
   }, 1000);
 }
 function stopTimer() { clearInterval(timerId); timerId = null; }
@@ -150,7 +190,7 @@ $("checkBtn").addEventListener("click", () => {
 });
 
 $("resetBtn").addEventListener("click", () => {
-  clearProgress(collection, level);
+  clearProgress(collection, level, index);
   load();
 });
 
@@ -161,29 +201,26 @@ $("solveBtn").addEventListener("click", () => {
   finish(true);
 });
 
-$("nextBtn").addEventListener("click", () => {
-  const i = ORDER.findIndex(([a, b]) => a === collection && b === level);
-  [collection, level] = ORDER[(i + 1) % ORDER.length];
-  ui.syncTabs(collection, level);
-  load();
-});
+$("nextBtn").addEventListener("click", () => open(...nextPuzzle()));
 
 document.querySelectorAll("button[data-collection]").forEach((b) =>
   b.addEventListener("click", () => {
-    collection = b.dataset.collection;
-    if (!hasPuzzle(collection, level)) level = "easy";
-    ui.syncTabs(collection, level);
-    load();
+    const c = b.dataset.collection;
+    open(c, hasPuzzle(c, level) ? level : "easy");
   })
 );
 document.querySelectorAll("button[data-level]").forEach((b) =>
   b.addEventListener("click", () => {
     if (b.getAttribute("aria-disabled") === "true") return;
-    level = b.dataset.level;
-    ui.syncTabs(collection, level);
-    load();
+    open(collection, b.dataset.level);
   })
 );
+
+/* progress dots: one per puzzle of the level */
+$("dots").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-index]");
+  if (b && +b.dataset.index !== index) open(collection, level, +b.dataset.index);
+});
 
 $("modeFill").addEventListener("click", () => { tool = FILLED; ui.syncTool(tool); });
 $("modeMark").addEventListener("click", () => { tool = MARKED; ui.syncTool(tool); });
@@ -227,8 +264,9 @@ document.querySelectorAll("[data-lang]").forEach((b) =>
     setLang(b.dataset.lang);
     ui.renderBoard(game);              /* cell labels */
     if (game.won) { ui.setWon(true); ui.fillStory(game, revealed); }
-    ui.showBest(loadBest(collection, level));
+    ui.showBest(loadBest(collection, level, index));
     ui.syncTabs(collection, level);    /* "coming soon" label */
+    ui.renderDots(collection, level, index);
   })
 );
 
@@ -239,6 +277,6 @@ window.addEventListener("pagehide", saveNow);
 /* touch screens get their own instructions */
 if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) $("hint").dataset.i18n = "hintTouch";
 
+migrateSingleLevels(ORDER);
 setLang(initialLang());
-ui.syncTabs(collection, level);
-load();
+open();

@@ -1,7 +1,8 @@
 /* DOM rendering — reads the Game, never changes it */
 import { t, getLang } from "./i18n.js";
 import { fmt, FILLED, MARKED } from "./game.js";
-import { LEVELS, hasPuzzle } from "./puzzles.js";
+import { LEVELS, hasPuzzle, puzzleList } from "./puzzles.js";
+import { isSolved } from "./storage.js";
 
 export const $ = (id) => document.getElementById(id);
 
@@ -95,7 +96,7 @@ export function announce(text) {
 export const setWon = (on) => $("board").classList.toggle("is-won", on);
 
 export const showTime = (s) => { $("timer").textContent = fmt(s); };
-export const showBest = (best) => { $("best").textContent = best ? `${t("best")} ${fmt(best)}` : ""; };
+export const showBest = (best) => { $("best").textContent = best != null ? `${t("best")} ${fmt(best)}` : ""; };
 
 /* ---------- story card ---------- */
 export function fillStory(game, revealed) {
@@ -133,6 +134,19 @@ export function syncTabs(collection, level) {
     else b.setAttribute("aria-disabled", "true");
     b.querySelector("small").textContent = ready ? `${LEVELS[lv]}×${LEVELS[lv]}` : t("soon");
   });
+}
+
+/* progress dots under the level switch: ● solved · ring = current · ○ not yet */
+export function renderDots(collection, level, index) {
+  const list = puzzleList(collection, level);
+  const nav = $("dots");
+  nav.hidden = list.length < 2;
+  nav.innerHTML = list.map((_, i) => {
+    const solved = isSolved(collection, level, i);
+    const state = t(solved ? "dotSolved" : "dotUnsolved");
+    const current = i === index ? ' aria-current="true"' : "";
+    return `<button type="button" class="dot${solved ? " is-solved" : ""}" data-index="${i}"${current} aria-label="${t("dotLabel")(i + 1, list.length)}, ${state}"></button>`;
+  }).join("");
 }
 
 export function syncTool(mode) {

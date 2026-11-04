@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* Checks every puzzle in src/puzzles.js:
+   - every level is a non-empty list, with no grid used twice
    - grid is square, only "#" and ".", size matches its level
    - the grid is not empty
    - all texts exist in every language
@@ -87,27 +88,36 @@ function countSolutions(rows, cols, limit = 2) {
 let problems = 0;
 const fail = (id, msg) => { problems++; console.error(`  ✗ ${id}: ${msg}`); };
 
+const seen = new Map();   /* grid → id, to catch copy-paste duplicates */
+const all = [];
 for (const [collection, levels] of Object.entries(PUZZLES)) {
-  for (const [level, puzzle] of Object.entries(levels)) {
-    const id = `${collection}/${level}`;
-    const size = LEVELS[level];
-    const g = puzzle.grid;
-    if (!size) { fail(id, `unknown level "${level}" (add it to LEVELS)`); continue; }
-    if (!Array.isArray(g) || g.length !== size) { fail(id, `needs ${size} rows, has ${g && g.length}`); continue; }
-    if (g.some((row) => row.length !== size)) { fail(id, `every row must be ${size} characters`); continue; }
-    if (g.some((row) => /[^#.]/.test(row))) { fail(id, `only "#" and "." are allowed`); continue; }
-    if (!g.join("").includes("#")) { fail(id, "grid is empty"); continue; }
-    if (!puzzle.original) fail(id, "missing original name");
-    for (const field of ["name", "region", "text"])
-      for (const lang of LANGS)
-        if (!puzzle[field] || !puzzle[field][lang]) fail(id, `missing ${field}.${lang}`);
-
-    const { rows, cols } = cluesFor(parseGrid(g));
-    const found = countSolutions(rows, cols);
-    if (found === 1) console.log(`  ✓ ${id} (${size}×${size}) — one solution`);
-    else fail(id, found === 0 ? "no solution (bug in checker?)" : "more than one solution");
+  for (const [level, list] of Object.entries(levels)) {
+    if (!Array.isArray(list) || !list.length) { fail(`${collection}/${level}`, "must be a non-empty list of puzzles"); continue; }
+    list.forEach((puzzle, i) => all.push([`${collection}/${level}/${i + 1}`, level, puzzle]));
   }
 }
 
-console.log(problems ? `\n${problems} problem(s)` : "\nall puzzles ok");
+for (const [id, level, puzzle] of all) {
+  const size = LEVELS[level];
+  const g = puzzle.grid;
+  if (!size) { fail(id, `unknown level "${level}" (add it to LEVELS)`); continue; }
+  if (!Array.isArray(g) || g.length !== size) { fail(id, `needs ${size} rows, has ${g && g.length}`); continue; }
+  if (g.some((row) => row.length !== size)) { fail(id, `every row must be ${size} characters`); continue; }
+  if (g.some((row) => /[^#.]/.test(row))) { fail(id, `only "#" and "." are allowed`); continue; }
+  if (!g.join("").includes("#")) { fail(id, "grid is empty"); continue; }
+  const key = g.join("/");
+  if (seen.has(key)) fail(id, `same grid as ${seen.get(key)}`);
+  else seen.set(key, id);
+  if (!puzzle.original) fail(id, "missing original name");
+  for (const field of ["name", "region", "text"])
+    for (const lang of LANGS)
+      if (!puzzle[field] || !puzzle[field][lang]) fail(id, `missing ${field}.${lang}`);
+
+  const { rows, cols } = cluesFor(parseGrid(g));
+  const found = countSolutions(rows, cols);
+  if (found === 1) console.log(`  ✓ ${id} ${puzzle.name && puzzle.name.en} (${size}×${size}) — one solution`);
+  else fail(id, found === 0 ? "no solution (bug in checker?)" : "more than one solution");
+}
+
+console.log(problems ? `\n${problems} problem(s)` : `\nall ${all.length} puzzles ok`);
 process.exit(problems ? 1 : 0);

@@ -306,6 +306,44 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .levels button { min-width: 112px; }
 
+/* progress dots: one per puzzle of the level.
+   solved = filled, not yet = hollow, current = ring around it —
+   shape, not color alone, tells the states apart */
+.dots {
+  display: flex;
+  justify-content: center;
+  margin: calc(var(--s3) * -1) 0;   /* sits close to the level switch */
+}
+
+.dots[hidden] { display: none; }
+
+.dot {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.dot::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--text-muted);
+  border-radius: 50%;
+}
+
+.dot.is-solved::before { background: var(--text); border-color: var(--text); }
+
+.dot[aria-current="true"]::before {
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--text);
+}
+
+.dot:focus-visible { outline-offset: -2px; }
+
 /* timer */
 .status {
   display: flex;
