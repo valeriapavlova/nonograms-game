@@ -58,16 +58,20 @@
     <span style="bottom:8%;left:8%"></span>
   </div>
 
+  <!-- collection + level: two rows on larger screens, one compact row on phones.
+       Phones show the short label; the full one stays for screen readers. -->
+  <div class="tabs">
   <nav class="segmented" data-i18n-label="collection" aria-label="Collection">
-    <button data-collection="ua" aria-pressed="true" data-i18n="ukraine">ukraine</button>
-    <button data-collection="va" aria-pressed="false" data-i18n="valencia">valència</button>
+    <button data-collection="ua" aria-pressed="true"><span class="tab__short" data-i18n="ukraineShort">UA</span> <span class="tab__full" data-i18n="ukraine">ukraine</span></button>
+    <button data-collection="va" aria-pressed="false"><span class="tab__short" data-i18n="valenciaShort">VAL</span> <span class="tab__full" data-i18n="valencia">valència</span></button>
   </nav>
 
   <nav class="segmented levels" data-i18n-label="level" aria-label="Level">
-    <button data-level="easy" aria-pressed="true"><span data-i18n="easy">easy</span><small>5×5</small></button>
-    <button data-level="medium" aria-pressed="false"><span data-i18n="medium">medium</span><small>10×10</small></button>
-    <button data-level="hard" aria-pressed="false"><span data-i18n="hard">hard</span><small>15×15</small></button>
+    <button data-level="easy" aria-pressed="true"><span class="tab__short">5</span> <span class="tab__full" data-i18n="easy">easy</span> <small>5×5</small></button>
+    <button data-level="medium" aria-pressed="false"><span class="tab__short">10</span> <span class="tab__full" data-i18n="medium">medium</span> <small>10×10</small></button>
+    <button data-level="hard" aria-pressed="false"><span class="tab__short">15</span> <span class="tab__full" data-i18n="hard">hard</span> <small>15×15</small></button>
   </nav>
+  </div>
 
   <!-- dots + timer: two rows on larger screens, one row on phones -->
   <div class="meta">
@@ -107,7 +111,10 @@
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2.5"/></svg>
       </button>
     </div>
-    <button class="btn btn--primary" id="checkBtn" data-i18n="check">check</button>
+    <button class="btn btn--primary btn--icon" id="checkBtn" data-i18n-label="check" aria-label="check">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1 7h3v2H1zM3 9h3v2H3zM5 11h3v2H5zM7 9h3v2H7zM9 7h3v2H9zM11 5h3v2h-3zM13 3h2v2h-2z"/></svg>
+      <span data-i18n="check">check</span>
+    </button>
     <!-- icon + caption on phones, plain text button on larger screens -->
     <button class="btn btn--ghost btn--icon" id="resetBtn" data-i18n-label="reset" aria-label="reset">
       <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2h2v1h1v1h1v2H1V4h1V3h1zM6 2h5v2H6zM11 4h2v2h-2zM12 6h2v4h-2zM11 10h2v2h-2zM5 12h6v2H5zM3 10h2v2H3zM2 6h2v4H2z"/></svg>
