@@ -69,6 +69,7 @@ function load() {
   game = new Game(getPuzzle(collection, level, index), loadProgress(collection, level, index));
   revealed = false;
   document.documentElement.dataset.collection = collection;
+  document.documentElement.dataset.level = level;
   stopTimer();
   ui.renderBoard(game, puzzleList(collection, level));
   ui.hideStory();
