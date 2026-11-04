@@ -140,4 +140,4 @@ The empty `.nojekyll` file tells Pages to serve the files as they are. The Open 
 
 ## Credits
 
-Design and code by [Valeria Pavlova](https://va-pavlova.com), UI/UX designer in València.
+Concept and design by [Valeria Pavlova](https://va-pavlova.com). Built with Claude Code.
