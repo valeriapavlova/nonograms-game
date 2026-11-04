@@ -76,7 +76,11 @@ if (typeof ResizeObserver !== "undefined") {
   }).observe($("stage"));
 }
 phone.addEventListener("change", fitBoard);
-if (document.fonts) document.fonts.ready.then(fitBoard);
+/* the pixel font changes the clue sizes: fit again once it has loaded */
+if (document.fonts) {
+  document.fonts.ready.then(fitBoard);
+  document.fonts.addEventListener("loadingdone", fitBoard);
+}
 
 export const cellEl = (game, r, c) => $("cells").children[r * game.n + c];
 
@@ -152,6 +156,9 @@ export function fillStory(game, revealed) {
 export function showStory(game, revealed) {
   fillStory(game, revealed);
   announce(`${$("storyEyebrow").textContent}. ${$("storyTitle").textContent}`);
+  /* phones: let the last cross-stitch finish before the sheet covers the board
+     (same timing as the --d delay per cell + the 0.45s stitch animation) */
+  $("story").style.setProperty("--sheet-delay", `${(2 * game.n - 2) * 35 + 450}ms`);
   $("story").hidden = false;
   $("stage").classList.add("has-story");
   /* on phones the card is a sheet over the game: move focus into it */
